@@ -1,0 +1,6 @@
+{
+  "name": "CET-6 Grammar Tutor",
+  "description": "Interactive step-by-step grammar tutor analyzing long and difficult sentences from recent CET-6 exams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
