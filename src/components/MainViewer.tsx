@@ -59,8 +59,8 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, passag
         }
         return <span key={i}>{part}</span>;
       })}
-      {/* Sentence toolbar — always visible on touch, hover on desktop */}
-      <span className="inline-flex items-center gap-0.5 ml-2 transition-opacity align-middle opacity-100 md:opacity-0 md:group-hover:opacity-100">
+      {/* Sentence toolbar — always visible */}
+      <span className="inline-flex items-center gap-0.5 ml-2 align-middle">
         <button
           onClick={(e) => { e.stopPropagation(); onSentenceClick(text); }}
           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); onSentenceClick(text); }}
