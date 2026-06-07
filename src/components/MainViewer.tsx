@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Passage, SectionLabels, SectionIcons } from '../types';
 import {
   MessageSquare, HelpCircle, BookmarkPlus, CheckCircle2, XCircle,
@@ -18,18 +18,38 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, passag
   text: string; onWordClick: (w: string, s: string, x: number, y: number) => void;
   onSentenceClick: (s: string) => void; onBookmark: MainViewerProps['onBookmark']; passageTitle: string;
 }) {
-  // Split by word boundaries — preserves every space, comma, period
   const parts = text.split(/\b/);
+  // Track touch start position to prevent accidental word clicks during scroll
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent, word: string, sentence: string) => {
+    if (!touchStart.current) return;
+    const dx = Math.abs(e.changedTouches[0].clientX - touchStart.current.x);
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStart.current.y);
+    // Only treat as click if finger didn't move much (not scrolling)
+    if (dx < 8 && dy < 8) {
+      e.preventDefault();
+      e.stopPropagation();
+      const r = (e.target as HTMLElement).getBoundingClientRect();
+      onWordClick(word, sentence, r.left, r.bottom);
+    }
+    touchStart.current = null;
+  };
+
   return (
     <span className="inline">
       {parts.map((part, i) => {
-        // Only make alphabetic words clickable (2+ chars)
         if (/^[a-zA-Z]{2,}$/.test(part)) {
           return (
             <span
               key={i}
               onClick={(e) => { e.stopPropagation(); const r=(e.target as HTMLElement).getBoundingClientRect(); onWordClick(part,text,r.left,r.bottom); }}
-              onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); const r=(e.target as HTMLElement).getBoundingClientRect(); onWordClick(part,text,r.left,r.bottom); }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={(e) => handleTouchEnd(e, part, text)}
               className="cursor-pointer hover:bg-blue-500 hover:text-white active:bg-blue-600 rounded-sm px-[1px] transition-colors touch-manipulation"
               title="点击查词"
             >
@@ -37,11 +57,10 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, passag
             </span>
           );
         }
-        // Return punctuation/spaces/digits exactly as-is
         return <span key={i}>{part}</span>;
       })}
-      {/* Sentence toolbar — appears on hover, clearly separated from text */}
-      <span className="inline-flex items-center gap-0.5 ml-2 opacity-0 group-hover:opacity-100 transition-opacity align-middle">
+      {/* Sentence toolbar — always visible on touch, hover on desktop */}
+      <span className="inline-flex items-center gap-0.5 ml-2 transition-opacity align-middle opacity-100 md:opacity-0 md:group-hover:opacity-100">
         <button
           onClick={(e) => { e.stopPropagation(); onSentenceClick(text); }}
           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); onSentenceClick(text); }}

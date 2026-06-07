@@ -287,7 +287,7 @@ async function startServer() {
       const {word,sentence,apiKey}=req.body;
       if(!apiKey||!word) return res.status(400).json({error:"API Key required"});
       const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
-      const prompt=`CET vocab expert. Output JSON: {"word":"","definition":"","phoneticUK":"","phoneticUS":"","definitions":[{"pos":"n","meaning":""}],"examples":["en——zh"],"synonyms":[],"phrases":[{"phrase":"","meaning":""}],"mnemonic":""} Two CET-level examples. No markdown.`;
+      const prompt=`CET-4/6 vocab expert. Output JSON. CRITICAL: definition and meanings MUST be in Chinese. phonetics in standard format. Two CET-level example sentences with Chinese translations. Format: {"word":"","definition":"中文释义","phoneticUK":"UK[xxx]","phoneticUS":"US[xxx]","definitions":[{"pos":"词性","meaning":"中文词义"}],"examples":["English sentence —— 中文翻译"],"synonyms":["近义词"],"phrases":[{"phrase":"短语","meaning":"中文含义"}],"mnemonic":"中文记忆法"} ALL explanation fields in Chinese, only examples have English sentences with Chinese translation after ——. No markdown.`;
       const c=await (o.chat.completions.create as any)({model:'deepseek-v4-flash',messages:[{role:"system",content:prompt},{role:"user",content:sentence?`Word:"${word}" Context:"${sentence}"`:`Word:"${word}"`}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
       let raw=c.choices[0].message.content||'{}';
       raw=raw.trim().replace(/^```json\s*\n?/i,'').replace(/\n?```\s*$/,'');
