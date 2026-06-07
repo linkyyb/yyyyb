@@ -48,12 +48,14 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
     <span className="inline">
       {parts.map((part, i) => {
         if (/^[a-zA-Z]{2,}$/.test(part)) {
-          // In phrase mode: only highlighted phrases are clickable
+          // In phrase mode: check if the full phrase appears in this sentence
           let hlStyle: React.CSSProperties = {};
           let phraseMatch: any = null;
           if (phraseMode && phraseHighlights && phraseHighlights.length > 0) {
+            const normSentence = text.replace(/\s+/g, ' ').toLowerCase();
             phraseMatch = phraseHighlights.find((h: any) => {
-              return h.phrase && h.phrase.toLowerCase().includes(part.toLowerCase());
+              if (!h.phrase) return false;
+              return normSentence.includes(h.phrase.replace(/\s+/g, ' ').toLowerCase());
             });
             if (phraseMatch) hlStyle = { backgroundColor: phraseMatch.color, borderRadius: '3px', padding: '1px 2px' };
           }
