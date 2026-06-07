@@ -126,7 +126,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
 
   // ── Reading passage (shared) ──
   const PassageBody = () => (
-    <div className="space-y-6 text-lg leading-loose font-serif">
+    <div className="space-y-6 leading-loose font-serif" style={{fontSize: 'inherit'}}>
       {passage.paragraphs.map((para, pi) => (
         <p key={para.id} className="indent-8 group">
           {para.sentences.map((sent, si) => (

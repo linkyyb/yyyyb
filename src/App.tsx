@@ -280,25 +280,25 @@ export default function App() {
         />
       )}
       <main className="flex-1 flex overflow-hidden">
-        {/* Sidebar toggle + Font size */}
-        <div className="absolute top-2 left-2 z-50 flex items-center gap-1">
-          <button
-            onClick={() => setSidebarVisible(!sidebarVisible)}
-            className="p-1.5 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-100 transition-colors text-slate-500"
-            title={sidebarVisible ? '隐藏侧边栏' : '显示侧边栏'}
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-          </button>
-          <select
-            value={fontSize}
-            onChange={(e) => { const v=parseInt(e.target.value); setFontSize(v); localStorage.setItem('cet_font_size', String(v)); }}
-            className="p-1 bg-white border border-slate-200 rounded text-xs text-slate-600"
-          >
-            {[12,14,16,18,20,22,24].map(s => <option key={s} value={s}>{s}px</option>)}
-          </select>
-        </div>
         {/* Left: Reading Area */}
-        <div className={`${sidebarVisible ? 'w-1/2' : 'w-[60%]'} h-full overflow-y-auto border-r border-slate-200 bg-white transition-all`} style={{fontSize: fontSize+'px'}}>
+        <div className={`${sidebarVisible ? 'w-1/2' : 'flex-[3]'} h-full overflow-y-auto border-r border-slate-200 bg-white transition-all`} style={{fontSize: fontSize+'px'}}>
+          {/* Inline toolbar — blends with reading header */}
+          <div className="sticky top-0 z-40 flex items-center gap-3 px-4 py-2 bg-white/90 backdrop-blur border-b border-slate-100">
+            <button
+              onClick={() => setSidebarVisible(!sidebarVisible)}
+              className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
+              title={sidebarVisible ? '隐藏侧边栏' : '显示侧边栏'}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+            </button>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">字号</span>
+            <input
+              type="range" min="12" max="24" step="1" value={fontSize}
+              onChange={(e) => { const v=parseInt(e.target.value); setFontSize(v); localStorage.setItem('cet_font_size', String(v)); }}
+              className="w-20 h-1 accent-blue-500"
+            />
+            <span className="text-[10px] text-slate-400 w-8">{fontSize}px</span>
+          </div>
           {activeTab === 'exams' && selectedPassage ? (
             <MainViewer
               passage={selectedPassage}
@@ -346,7 +346,7 @@ export default function App() {
           )}
         </div>
         {/* Right: AI Chat Panel */}
-        <div className="w-1/2 h-full bg-slate-50 flex flex-col relative">
+        <div className={`${sidebarVisible ? 'w-1/2' : 'w-[40%]'} h-full bg-slate-50 flex flex-col relative transition-all`}>
           <ChatPanel
             systemContext={systemContext}
             autoSendPrompt={autoSendPrompt}
