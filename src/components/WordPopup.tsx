@@ -85,7 +85,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
     if (!apiKey) return;
     if (phraseDef) { setLookup({ word, definition: phraseDef, examples: [] }); delete (window as any).__phraseDef; setIsLoading(false); return; }
     if (existingEntry?.definitions?.length || existingEntry?.examples?.length) {
-      setLookup({ word, definition: existingEntry.definition || '', phoneticUK: existingEntry.phoneticUK, phoneticUS: existingEntry.phoneticUS, definitions: existingEntry.definitions, examples: (existingEntry.examples||[]).map(e => `${e.en} —— ${e.zh}`), synonyms: existingEntry.synonyms, phrases: existingEntry.phrases, mnemonic: existingEntry.mnemonic });
+      setLookup({ word, definition: existingEntry.definition || '', phoneticUK: existingEntry.phoneticUK, phoneticUS: existingEntry.phoneticUS, definitions: existingEntry.definitions, examples: (existingEntry.examples||[]).map(e => `${e.en} —— ${e.zh}`), synonyms: existingEntry.synonyms, phrases: existingEntry.phrases, mnemonic: existingEntry.mnemonic, derivatives: existingEntry.derivatives });
       setIsLoading(false); return;
     }
     if (cached) { setIsLoading(false); return; }
