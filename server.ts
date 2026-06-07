@@ -315,19 +315,49 @@ async function startServer() {
     }catch(e:any){res.status(500).json({error:"Lookup failed",details:e?.message});}
   });
 
-  // Phrase scan — per-paragraph, frontend does position matching
+  // Phrase scan — chunked approach for better coverage
   app.post("/api/scan-phrases", async(req,res)=>{
     try{
       const {text,apiKey}=req.body;
       if(!apiKey||!text) return res.status(400).json({error:"API Key and text required"});
       const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
-      const prompt=`Scan this English text for ALL important CET-4/6 vocabulary-book phrases. Include phrasal verbs, prepositional phrases, collocations, fixed expressions, idioms. For each phrase output: phrase (EXACT match from text, even if inflected), baseForm (dictionary/base form: \"took measures\"→\"take measures\", \"played a role\"→\"play a role\"), definition (Chinese). Find 15-25 phrases. Output JSON: {"phrases":[{"phrase":"exact text match","baseForm":"dictionary form","definition":"Chinese def"}]}. No markdown.`;
-      const c=await (o.chat.completions.create as any)({model:'deepseek-v4-flash',messages:[{role:"system",content:prompt},{role:"user",content:text}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
-      let raw=c.choices[0].message.content||'{"phrases":[]}';raw=raw.trim().replace(/^```json\s*\n?/i,'').replace(/\n?```\s*$/,'');
-      let phrases:any[]=[];try{const p=JSON.parse(raw);phrases=p.phrases||[];}catch{phrases=[];}
-      // Frontend does position matching — only return phrases whose exact text appears
+      const prompt=`Find ALL important English phrases/collocations/idioms in this text. Output JSON format: {"phrases":[{"phrase":"exact words from the text","baseForm":"dictionary form of phrase","definition":"Chinese meaning"}]}. Find at least 8 phrases. Only output phrases that appear EXACTLY in the text. No markdown.`;
+
+      // Chunk text into 1500-char pieces with 100-char overlap
+      const chunkSize=1500,overlap=100;
+      const chunks:string[]=[];
+      let i=0;
+      while(i<text.length){
+        chunks.push(text.substring(i,i+chunkSize));
+        if(i+chunkSize>=text.length) break;
+        i+=chunkSize-overlap;
+      }
+
+      // Scan each chunk in parallel
+      const allPhrases:any[]=[];
+      const seen=new Set<string>();
+      for(const chunk of chunks){
+        try{
+          const c=await (o.chat.completions.create as any)({model:'deepseek-v4-flash',messages:[{role:"system",content:prompt},{role:"user",content:chunk}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
+          let raw=c.choices[0].message.content||'{"phrases":[]}';raw=raw.trim().replace(/^```json\s*\n?/i,'').replace(/\n?```\s*$/,'');
+          let phrases:any[]=[];try{const p=JSON.parse(raw);phrases=p.phrases||[];}catch{phrases=[];}
+          for(const p of phrases){
+            if(!p.phrase) continue;
+            // Normalize whitespace for matching (handle line breaks)
+            const normText=text.replace(/\s+/g,' ');
+            const normPhrase=p.phrase.replace(/\s+/g,' ');
+            if(!normText.includes(normPhrase)) continue;
+            const key=normPhrase.toLowerCase();
+            if(seen.has(key)) continue;
+            seen.add(key);
+            p.phrase=normPhrase; // Use normalized form
+            allPhrases.push(p);
+          }
+        }catch{}
+      }
+
       const colors=['rgba(255,235,59,0.35)','rgba(0,200,83,0.25)','rgba(33,150,243,0.2)','rgba(233,30,99,0.22)','rgba(156,39,176,0.2)','rgba(255,152,0,0.25)','rgba(0,188,212,0.2)','rgba(76,175,80,0.2)'];
-      const result=phrases.filter((p:any)=>p.phrase&&text.includes(p.phrase)).map((p:any,i:number)=>({...p,color:colors[i%colors.length]}));
+      const result=allPhrases.map((p:any,i:number)=>({...p,color:colors[i%colors.length]}));
       res.json({phrases:result});
     }catch(e:any){res.status(500).json({error:"Phrase scan failed",details:e?.message});}
   });
