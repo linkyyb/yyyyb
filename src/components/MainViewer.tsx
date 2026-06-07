@@ -66,7 +66,8 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
                 e.stopPropagation(); const r=(e.target as HTMLElement).getBoundingClientRect();
                 if (phraseMatch) {
                   (window as any).__phraseDef = phraseMatch.definition;
-                  onWordClick(phraseMatch.phrase, text, r.left, r.bottom);
+                  (window as any).__phraseBase = phraseMatch.baseForm || null;
+                  onWordClick(phraseMatch.baseForm || phraseMatch.phrase, text, r.left, r.bottom);
                 } else onWordClick(part, text, r.left, r.bottom);
               }}
               onTouchStart={clickable ? handleTouchStart : undefined}

@@ -321,7 +321,7 @@ async function startServer() {
       const {text,apiKey}=req.body;
       if(!apiKey||!text) return res.status(400).json({error:"API Key and text required"});
       const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
-      const prompt=`Scan this English text for ALL important CET-4/6 vocabulary-book phrases. Include: phrasal verbs (take over,carry out),prepositional phrases (in terms of,on behalf of),collocations (pose a threat,play a role),fixed expressions (as well as,in fact),idioms. Find 15-25 phrases. Output JSON: {"phrases":[{"phrase":"exact text match","definition":"Chinese definition"}]}. No markdown.`;
+      const prompt=`Scan this English text for ALL important CET-4/6 vocabulary-book phrases. Include phrasal verbs, prepositional phrases, collocations, fixed expressions, idioms. For each phrase output: phrase (EXACT match from text, even if inflected), baseForm (dictionary/base form: \"took measures\"→\"take measures\", \"played a role\"→\"play a role\"), definition (Chinese). Find 15-25 phrases. Output JSON: {"phrases":[{"phrase":"exact text match","baseForm":"dictionary form","definition":"Chinese def"}]}. No markdown.`;
       const c=await (o.chat.completions.create as any)({model:'deepseek-v4-flash',messages:[{role:"system",content:prompt},{role:"user",content:text}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
       let raw=c.choices[0].message.content||'{"phrases":[]}';raw=raw.trim().replace(/^```json\s*\n?/i,'').replace(/\n?```\s*$/,'');
       let phrases:any[]=[];try{const p=JSON.parse(raw);phrases=p.phrases||[];}catch{phrases=[];}

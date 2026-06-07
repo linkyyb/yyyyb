@@ -78,6 +78,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
 
   // Check for pre-scanned phrase definition
   const phraseDef = (window as any).__phraseDef as string | undefined;
+  const phraseBase = (window as any).__phraseBase as string | undefined;
   const isPhrase = word.includes(' ') && word.length > 5;
 
   // Fetch AI data — skip if cached or vocab has rich data or phrase definition exists
@@ -128,7 +129,12 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="font-bold text-base text-slate-800 truncate">{word}</span>
+          <div className="min-w-0 flex-1">
+            <span className="font-bold text-base text-slate-800">{word}</span>
+            {phraseBase && phraseBase !== word && (
+              <span className="text-xs text-slate-400 ml-1">← {phraseBase}</span>
+            )}
+          </div>
           {isPhrase && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full font-bold shrink-0">短语</span>}
           {existingEntry && (
             <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold shrink-0">
