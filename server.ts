@@ -291,12 +291,27 @@ async function startServer() {
       const {word,sentence,apiKey}=req.body;
       if(!apiKey||!word) return res.status(400).json({error:"API Key required"});
       const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
-      const prompt=`CET-4/6 vocab expert. Output JSON. CRITICAL: definition and meanings MUST be in Chinese. Include ALL derivative words (e.g. infer→inference(n.推理),inferential(adj.推论的)). Format: {"word":"","definition":"中文释义","phoneticUK":"UK[xxx]","phoneticUS":"US[xxx]","definitions":[{"pos":"词性","meaning":"中文词义"}],"examples":["English sentence —— 中文翻译"],"synonyms":["近义词"],"phrases":[{"phrase":"短语","meaning":"中文含义"}],"mnemonic":"中文记忆法","derivatives":[{"word":"派生词","pos":"词性","meaning":"中文含义"}]} ALL explanation fields in Chinese, no markdown.`;
-      const c=await (o.chat.completions.create as any)({model:'deepseek-v4-flash',messages:[{role:"system",content:prompt},{role:"user",content:sentence?`Word:"${word}" Context:"${sentence}"`:`Word:"${word}"`}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
+      const prompt=`Output this exact JSON structure for the word. The "derivatives" array is MANDATORY — never omit it. Find noun/verb/adjective/adverb forms of the word.
+{"word":"infer","definition":"推断;推论","phoneticUK":"/ɪnˈfɜːr/","phoneticUS":"/ɪnˈfɜr/","definitions":[{"pos":"vt","meaning":"推断"},{"pos":"vi","meaning":"推论"}],"examples":["From the evidence we can infer his guilt. —— 从证据中可以推断他有罪。"],"synonyms":["deduce","conclude"],"phrases":[{"phrase":"infer from","meaning":"从…推断"}],"mnemonic":"","derivatives":[{"word":"inference","pos":"n","meaning":"推理;推论"},{"word":"inferential","pos":"adj","meaning":"推论的"}]}`;
+      const c=await (o.chat.completions.create as any)({model:'deepseek-v4-pro',messages:[{role:"system",content:prompt},{role:"user",content:sentence?`Word:"${word}" Context:"${sentence}"`:`Word:"${word}"`}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
       let raw=c.choices[0].message.content||'{}';
       raw=raw.trim().replace(/^```json\s*\n?/i,'').replace(/\n?```\s*$/,'');
       const p=JSON.parse(raw);
-      res.json({word,definition:p.definition||'',phoneticUK:p.phoneticUK,phoneticUS:p.phoneticUS,definitions:p.definitions,examples:p.examples||[],synonyms:p.synonyms,phrases:p.phrases,mnemonic:p.mnemonic});
+
+      // If AI didn't return derivatives, make a dedicated call
+      let derivatives=p.derivatives||[];
+      if(derivatives.length===0){
+        try{
+          const dPrompt=`List ALL derivative/related word forms of the base word. Output JSON: {"derivatives":[{"word":"word","pos":"n/v/adj/adv","meaning":"Chinese meaning"}]}. Include nouns, verbs, adjectives, adverbs.`;
+          const dc=await (o.chat.completions.create as any)({model:'deepseek-v4-pro',messages:[{role:"system",content:dPrompt},{role:"user",content:word}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
+          let draw=dc.choices[0].message.content||'{"derivatives":[]}';
+          draw=draw.trim().replace(/^```json\s*\n?/i,'').replace(/\n?```\s*$/,'');
+          const dp=JSON.parse(draw);
+          if(dp.derivatives) derivatives=dp.derivatives;
+        }catch{}
+      }
+
+      res.json({word,definition:p.definition||'',phoneticUK:p.phoneticUK,phoneticUS:p.phoneticUS,definitions:p.definitions,examples:p.examples||[],synonyms:p.synonyms,phrases:p.phrases,mnemonic:p.mnemonic,derivatives});
     }catch(e:any){res.status(500).json({error:"Lookup failed",details:e?.message});}
   });
 
