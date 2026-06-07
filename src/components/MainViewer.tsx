@@ -48,14 +48,11 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
     <span className="inline">
       {parts.map((part, i) => {
         if (/^[a-zA-Z]{2,}$/.test(part)) {
-          // Check phrase highlighting
+          // Check phrase highlighting — simple word-in-phrase match
           let hlStyle: React.CSSProperties = {};
-          if (phraseMode && phraseHighlights) {
-            const combined = text.replace(/\s+/g, ' ');
-            const idx = combined.indexOf(part);
+          if (phraseMode && phraseHighlights && phraseHighlights.length > 0) {
             const match = phraseHighlights.find((h: any) => {
-              const hText = h.phrase.replace(/\s+/g, ' ');
-              return combined.substring(h.startIdx || 0, (h.endIdx || 0) + 1).includes(part);
+              return h.phrase && h.phrase.toLowerCase().includes(part.toLowerCase());
             });
             if (match) hlStyle = { backgroundColor: match.color, borderRadius: '3px', padding: '1px 2px' };
           }

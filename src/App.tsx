@@ -26,6 +26,7 @@ export default function App() {
   const [phraseHighlights, setPhraseHighlights] = useState<any[]>([]);
   const [phraseLists, setPhraseLists] = useState<PhraseList[]>([]);
   const [chatWordClick, setChatWordClick] = useState(localStorage.getItem('chat_word_click') !== 'false');
+  const [scanningPhrases, setScanningPhrases] = useState(false);
 
   // Word Popup
   const [wordPopup, setWordPopup] = useState<WordPopupData | null>(null);
@@ -321,23 +322,22 @@ export default function App() {
               onClick={() => {
                 const next = !phraseMode;
                 setPhraseMode(next);
-                // Save per-passage mode
                 if (selectedPassage) localStorage.setItem('cet6_passage_mode_'+selectedPassage.id, next?'phrase':'word');
                 if (next && selectedPassage) {
-                  // Check saved highlights for this passage
                   const saved = localStorage.getItem('cet6_phrase_scan_'+selectedPassage.id);
                   if (saved) { setPhraseHighlights(JSON.parse(saved)); return; }
-                  // AI scan entire passage
+                  setScanningPhrases(true);
                   const txt = selectedPassage.paragraphs.map(p=>p.sentences.join(' ')).join(' ');
                   if (apiKey) fetch('/api/scan-phrases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,apiKey})})
                     .then(r=>r.json()).then(d=>{
                       if(d.phrases){ setPhraseHighlights(d.phrases); localStorage.setItem('cet6_phrase_scan_'+selectedPassage.id,JSON.stringify(d.phrases)); }
-                    }).catch(()=>{});
+                    }).catch(()=>{}).finally(()=>setScanningPhrases(false));
+                  else setScanningPhrases(false);
                 } else { setPhraseHighlights([]); }
               }}
-              className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${phraseMode ? 'bg-yellow-200 text-yellow-800' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`px-2 py-1 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${phraseMode ? 'bg-yellow-200 text-yellow-800' : 'text-slate-400 hover:text-slate-600'}`}
               title="切换短语/单词模式"
-            >{phraseMode ? '✏️ 短语' : '🔤 单词'}</button>
+            >{scanningPhrases ? <span className="inline-block w-3 h-3 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></span> : null}{phraseMode ? '✏️ 短语' : '🔤 单词'}</button>
           </div>
           {activeTab === 'exams' && selectedPassage ? (
             <MainViewer
