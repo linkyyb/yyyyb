@@ -310,17 +310,7 @@ export default function App() {
               onClick={() => {
                 const next = !phraseMode;
                 setPhraseMode(next);
-                if (next && selectedPassage) {
-                  // Check saved highlights first
-                  const saved = localStorage.getItem('cet6_phrase_scan_' + selectedPassage.id);
-                  if (saved) { setPhraseHighlights(JSON.parse(saved)); return; }
-                  // AI scan
-                  const txt = selectedPassage.paragraphs.map(p=>p.sentences.join(' ')).join(' ');
-                  if (apiKey) fetch('/api/scan-phrases', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,apiKey})})
-                    .then(r=>r.json()).then(d=>{
-                      if(d.phrases){ setPhraseHighlights(d.phrases); localStorage.setItem('cet6_phrase_scan_'+selectedPassage.id,JSON.stringify(d.phrases)); }
-                    }).catch(()=>{});
-                }
+                if (!next) setPhraseHighlights([]);
               }}
               className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${phraseMode ? 'bg-yellow-200 text-yellow-800' : 'text-slate-400 hover:text-slate-600'}`}
               title="切换短语/单词模式"
@@ -334,6 +324,13 @@ export default function App() {
               onWordClick={handleWordClick}
               phraseMode={phraseMode}
               phraseHighlights={phraseHighlights}
+              onScanParagraph={(paraText, cb) => {
+                if (!apiKey) return;
+                fetch('/api/scan-phrases', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:paraText,apiKey})})
+                  .then(r=>r.json()).then(d=>{
+                    if(d.phrases){ setPhraseHighlights(prev=>[...prev,...d.phrases]); cb(d.phrases); }
+                  }).catch(()=>{});
+              }}
               onBookmark={handleAddBookmark}
             />
           ) : activeTab === 'vocab' && selectedVocab ? (

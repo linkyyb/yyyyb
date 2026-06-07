@@ -8,6 +8,7 @@ import {
 interface MainViewerProps {
   phraseMode?: boolean;
   phraseHighlights?: any[];
+  onScanParagraph?: (text: string, callback: (phrases: any[]) => void) => void;
   passage: Passage;
   onSentenceClick: (sentence: string) => void;
   onQuestionClick: (content: string, options: string, answer: string, explanation: string) => void;
@@ -97,7 +98,7 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
   );
 }
 
-export default function MainViewer({ passage, onSentenceClick, onQuestionClick, onWordClick, phraseMode, phraseHighlights, onBookmark }: MainViewerProps) {
+export default function MainViewer({ passage, onSentenceClick, onQuestionClick, onWordClick, phraseMode, phraseHighlights, onScanParagraph, onBookmark }: MainViewerProps) {
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [revealedQuestions, setRevealedQuestions] = useState<Record<string, boolean>>({});
 
@@ -143,7 +144,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
   const PassageBody = () => (
     <div className="space-y-6 leading-loose font-serif" style={{fontSize: 'inherit'}}>
       {passage.paragraphs.map((para, pi) => (
-        <p key={para.id} className="indent-8 group">
+        <p key={para.id} className="indent-8 group relative">
           {para.sentences.map((sent, si) => (
             <RenderSentence
               key={`${pi}-${si}`}
@@ -156,6 +157,17 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
               passageTitle={passage.title}
             />
           ))}
+          {phraseMode && onScanParagraph && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const paraText = para.sentences.join(' ');
+                onScanParagraph(paraText, (newPhrases) => { /* parent updates highlights */ });
+              }}
+              className="absolute -right-2 top-0 p-1 rounded-full bg-yellow-100 hover:bg-yellow-200 text-yellow-600 text-xs transition-colors"
+              title="扫描此段短语"
+            >🔍</button>
+          )}
         </p>
       ))}
     </div>
