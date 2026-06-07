@@ -152,11 +152,35 @@ export interface VocabList {
 }
 
 // ─── Word Popup ───
+// ─── Phrases ───
+export interface PhraseHighlight {
+  phrase: string;
+  startIdx: number;
+  endIdx: number;
+  color: string;
+}
+
+export interface PhraseItem {
+  id: string;
+  phrase: string;
+  definition: string;
+  examples?: WordExample[];
+  synonyms?: string[];
+}
+
+export interface PhraseList {
+  id: string;
+  title: string;
+  createdAt: number;
+  phrases: PhraseItem[];
+}
+
 export interface WordPopupData {
   word: string;
   sentence: string;
   x: number;
   y: number;
+  isPhrase?: boolean;
 }
 
 // ─── AI Word Lookup Result ───

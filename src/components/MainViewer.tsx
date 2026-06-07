@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 
 interface MainViewerProps {
+  phraseMode?: boolean;
+  phraseHighlights?: any[];
   passage: Passage;
   onSentenceClick: (sentence: string) => void;
   onQuestionClick: (content: string, options: string, answer: string, explanation: string) => void;
@@ -14,9 +16,10 @@ interface MainViewerProps {
 }
 
 // ── Word-level rendering: preserves ALL spacing ──
-function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, passageTitle }: {
+function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phraseMode, phraseHighlights, passageTitle }: {
   text: string; onWordClick: (w: string, s: string, x: number, y: number) => void;
-  onSentenceClick: (s: string) => void; onBookmark: MainViewerProps['onBookmark']; passageTitle: string;
+  onSentenceClick: (s: string) => void; onBookmark: MainViewerProps['onBookmark'];
+  phraseMode?: boolean; phraseHighlights?: any[]; passageTitle: string;
 }) {
   const parts = text.split(/\b/);
   // Track touch start position to prevent accidental word clicks during scroll
@@ -44,6 +47,17 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, passag
     <span className="inline">
       {parts.map((part, i) => {
         if (/^[a-zA-Z]{2,}$/.test(part)) {
+          // Check phrase highlighting
+          let hlStyle: React.CSSProperties = {};
+          if (phraseMode && phraseHighlights) {
+            const combined = text.replace(/\s+/g, ' ');
+            const idx = combined.indexOf(part);
+            const match = phraseHighlights.find((h: any) => {
+              const hText = h.phrase.replace(/\s+/g, ' ');
+              return combined.substring(h.startIdx || 0, (h.endIdx || 0) + 1).includes(part);
+            });
+            if (match) hlStyle = { backgroundColor: match.color, borderRadius: '3px', padding: '1px 2px' };
+          }
           return (
             <span
               key={i}
@@ -51,7 +65,8 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, passag
               onTouchStart={handleTouchStart}
               onTouchEnd={(e) => handleTouchEnd(e, part, text)}
               className="cursor-pointer hover:bg-blue-500 hover:text-white active:bg-blue-600 rounded-sm px-[1px] transition-colors touch-manipulation"
-              title="点击查词"
+              style={hlStyle}
+              title={hlStyle.backgroundColor ? '点击查看短语详解' : '点击查词'}
             >
               {part}
             </span>
@@ -82,7 +97,7 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, passag
   );
 }
 
-export default function MainViewer({ passage, onSentenceClick, onQuestionClick, onWordClick, onBookmark }: MainViewerProps) {
+export default function MainViewer({ passage, onSentenceClick, onQuestionClick, onWordClick, phraseMode, phraseHighlights, onBookmark }: MainViewerProps) {
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [revealedQuestions, setRevealedQuestions] = useState<Record<string, boolean>>({});
 
@@ -136,6 +151,8 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
               onWordClick={onWordClick}
               onSentenceClick={onSentenceClick}
               onBookmark={onBookmark}
+              phraseMode={phraseMode}
+              phraseHighlights={phraseHighlights}
               passageTitle={passage.title}
             />
           ))}

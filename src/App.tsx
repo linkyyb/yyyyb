@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { examPapers as builtInExams } from './data/exams';
-import { Passage, ExamPaper, Bookmark, VocabList, WordPopupData, PainRecord, defaultPainRecord, QuestionType, WordLookupResult } from './types';
+import { Passage, ExamPaper, Bookmark, VocabList, WordPopupData, PainRecord, defaultPainRecord, QuestionType, WordLookupResult, PhraseList, PhraseHighlight } from './types';
 import AppSidebar from './components/AppSidebar';
 import MainViewer from './components/MainViewer';
 import ChatPanel from './components/ChatPanel';
@@ -22,6 +22,9 @@ export default function App() {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [fontSize, setFontSize] = useState(parseInt(localStorage.getItem('cet_font_size') || '16'));
   const [wordCache, setWordCache] = useState<Map<string, WordLookupResult>>(new Map());
+  const [phraseMode, setPhraseMode] = useState(false);
+  const [phraseHighlights, setPhraseHighlights] = useState<any[]>([]);
+  const [phraseLists, setPhraseLists] = useState<PhraseList[]>([]);
 
   // Word Popup
   const [wordPopup, setWordPopup] = useState<WordPopupData | null>(null);
@@ -63,6 +66,8 @@ export default function App() {
       }
       const storedPain = localStorage.getItem('cet6_pain_points');
       if (storedPain) setPainRecord(JSON.parse(storedPain));
+      const storedPhrases = localStorage.getItem('cet6_phrases');
+      if (storedPhrases) setPhraseLists(JSON.parse(storedPhrases));
       const storedCompleted = localStorage.getItem('cet6_completed');
       if (storedCompleted) setCompletedQuestions(new Set(JSON.parse(storedCompleted)));
     } catch (e) {
@@ -75,6 +80,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem('cet6_vocab', JSON.stringify(vocabLists)); }, [vocabLists]);
   useEffect(() => { localStorage.setItem('cet6_pain_points', JSON.stringify(painRecord)); }, [painRecord]);
   useEffect(() => { localStorage.setItem('cet6_completed', JSON.stringify([...completedQuestions])); }, [completedQuestions]);
+  useEffect(() => { localStorage.setItem('cet6_phrases', JSON.stringify(phraseLists)); }, [phraseLists]);
 
   // ── Derived state ──
   const selectedExam = exams.find((e) => e.id === selectedExamId) || (exams.length > 0 ? exams[0] : undefined);
@@ -299,6 +305,26 @@ export default function App() {
               className="w-20 h-1 accent-blue-500"
             />
             <span className="text-[10px] text-slate-400 w-8">{fontSize}px</span>
+            <span className="text-slate-300">|</span>
+            <button
+              onClick={() => {
+                const next = !phraseMode;
+                setPhraseMode(next);
+                if (next && selectedPassage) {
+                  // Check saved highlights first
+                  const saved = localStorage.getItem('cet6_phrase_scan_' + selectedPassage.id);
+                  if (saved) { setPhraseHighlights(JSON.parse(saved)); return; }
+                  // AI scan
+                  const txt = selectedPassage.paragraphs.map(p=>p.sentences.join(' ')).join(' ');
+                  if (apiKey) fetch('/api/scan-phrases', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,apiKey})})
+                    .then(r=>r.json()).then(d=>{
+                      if(d.phrases){ setPhraseHighlights(d.phrases); localStorage.setItem('cet6_phrase_scan_'+selectedPassage.id,JSON.stringify(d.phrases)); }
+                    }).catch(()=>{});
+                }
+              }}
+              className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${phraseMode ? 'bg-yellow-200 text-yellow-800' : 'text-slate-400 hover:text-slate-600'}`}
+              title="切换短语/单词模式"
+            >{phraseMode ? '✏️ 短语' : '🔤 单词'}</button>
           </div>
           {activeTab === 'exams' && selectedPassage ? (
             <MainViewer
@@ -306,6 +332,8 @@ export default function App() {
               onSentenceClick={explainSentence}
               onQuestionClick={explainQuestion}
               onWordClick={handleWordClick}
+              phraseMode={phraseMode}
+              phraseHighlights={phraseHighlights}
               onBookmark={handleAddBookmark}
             />
           ) : activeTab === 'vocab' && selectedVocab ? (

@@ -300,6 +300,23 @@ async function startServer() {
     }catch(e:any){res.status(500).json({error:"Lookup failed",details:e?.message});}
   });
 
+  // Phrase scan
+  app.post("/api/scan-phrases", async(req,res)=>{
+    try{
+      const {text,apiKey}=req.body;
+      if(!apiKey||!text) return res.status(400).json({error:"API Key and text required"});
+      const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
+      const prompt=`Scan this English text for important CET-4/6 level phrases, collocations, idioms, and fixed expressions. Output JSON array of phrase objects. Each phrase gets: phrase (exact text match), startIdx (character position), endIdx (character position), definition (Chinese). Format: {"phrases":[{"phrase":"take part in","startIdx":45,"endIdx":57,"definition":"参加；参与"}]} Find ALL important phrases. Positions must be exact for highlighting. No markdown.`;
+      const c=await (o.chat.completions.create as any)({model:'deepseek-v4-flash',messages:[{role:"system",content:prompt},{role:"user",content:text.substring(0,20000)}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
+      let raw=c.choices[0].message.content||'{"phrases":[]}';raw=raw.trim().replace(/^```json\s*\n?/i,'').replace(/\n?```\s*$/,'');
+      let phrases:any[]=[];try{const p=JSON.parse(raw);phrases=p.phrases||[];}catch{phrases=[];}
+      // Assign alternating colors
+      const colors=['rgba(255,235,59,0.35)','rgba(0,200,83,0.2)','rgba(33,150,243,0.2)','rgba(233,30,99,0.18)','rgba(156,39,176,0.2)','rgba(255,152,0,0.2)'];
+      const result=phrases.filter((p:any)=>p.phrase&&p.startIdx>=0).map((p:any,i:number)=>({...p,color:colors[i%colors.length]}));
+      res.json({phrases:result});
+    }catch(e:any){res.status(500).json({error:"Phrase scan failed",details:e?.message});}
+  });
+
   // Vite
   if(process.env.NODE_ENV!=="production"){
     const vite=await createViteServer({server:{middlewareMode:true},appType:"spa"});
