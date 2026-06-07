@@ -11,9 +11,11 @@ interface SettingsModalProps {
   setModel: (model: DeepSeekModel) => void;
   isThinkingMode: boolean;
   setIsThinkingMode: (val: boolean) => void;
+  chatWordClick?: boolean;
+  setChatWordClick?: (val: boolean) => void;
 }
 
-export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, model, setModel, isThinkingMode, setIsThinkingMode }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, model, setModel, isThinkingMode, setIsThinkingMode, chatWordClick, setChatWordClick }: SettingsModalProps) {
   const [localKey, setLocalKey] = useState(apiKey);
   
   useEffect(() => {
@@ -71,10 +73,19 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
               onChange={(e) => setIsThinkingMode(e.target.checked)}
               className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
             />
-            <label htmlFor="thinkingCheckbox" className="text-sm font-bold text-slate-700 cursor-pointer">开启思考模式 (Reasoning & Chain of Thought)</label>
+            <label htmlFor="thinkingCheckbox" className="text-sm font-bold text-slate-700 cursor-pointer">开启思考模式</label>
           </div>
-          
-          <button 
+
+          {setChatWordClick && (
+            <div className="space-y-2 flex items-center gap-2">
+              <input type="checkbox" id="chatWordCb" checked={chatWordClick}
+                onChange={(e) => { setChatWordClick(e.target.checked); localStorage.setItem('chat_word_click', String(e.target.checked)); }}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+              <label htmlFor="chatWordCb" className="text-sm font-bold text-slate-700 cursor-pointer">聊天框双击查词</label>
+            </div>
+          )}
+
+          <button
             onClick={() => {
               setApiKey(localKey);
               onClose();

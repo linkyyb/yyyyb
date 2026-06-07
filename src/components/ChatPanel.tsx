@@ -1,15 +1,38 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Send, Settings, Sparkles, Loader2, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import { ChatMessage, DeepSeekModel } from '../types';
 import Markdown from 'react-markdown';
 import SettingsModal from './SettingsModal';
 
+// Clickable word wrapper for chat — double-click only (stricter)
+function ClickableText({ text, onWordClick }: { text: string; onWordClick: (word: string, x: number, y: number) => void }) {
+  const parts = text.split(/\b/);
+  let lastClick = useRef(0);
+  const handleDoubleClick = useCallback((word: string, e: React.MouseEvent) => {
+    const now = Date.now();
+    if (now - lastClick.current < 400) {
+      const rect = (e.target as HTMLElement).getBoundingClientRect();
+      onWordClick(word, rect.left, rect.bottom);
+    }
+    lastClick.current = now;
+  }, [onWordClick]);
+
+  return <span>{parts.map((p, i) => {
+    if (/^[a-zA-Z]{2,}$/.test(p)) {
+      return <span key={i} onClick={(e) => handleDoubleClick(p, e)} className="cursor-pointer hover:bg-blue-200 hover:text-blue-800 rounded-sm px-[1px] transition-colors" title="双击查词">{p}</span>;
+    }
+    return <span key={i}>{p}</span>;
+  })}</span>;
+}
+
 interface ChatPanelProps {
   systemContext: string;
   autoSendPrompt: string | null;
   clearAutoSend: () => void;
   chatSessionId: string;
+  onWordClick?: (word: string, x: number, y: number) => void;
+  chatWordClickEnabled?: boolean;
 }
 
 function makeSummary(text: string): string {
@@ -18,7 +41,7 @@ function makeSummary(text: string): string {
   return cleaned.substring(0, 55) + '...';
 }
 
-export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend, chatSessionId }: ChatPanelProps) {
+export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend, chatSessionId, onWordClick, chatWordClickEnabled }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -213,7 +236,9 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
                     </button>
                   )}
                   <div className="whitespace-pre-wrap leading-relaxed text-[15px] break-words">
-                    {msg.content}
+                    {chatWordClickEnabled && onWordClick
+                      ? <ClickableText text={msg.content} onWordClick={onWordClick} />
+                      : msg.content}
                   </div>
                 </div>
               )}
@@ -289,6 +314,8 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         setModel={setModel}
         isThinkingMode={isThinkingMode}
         setIsThinkingMode={setIsThinkingMode}
+        chatWordClick={chatWordClickEnabled}
+        setChatWordClick={(v) => { localStorage.setItem('chat_word_click', String(v)); }}
       />
     </>
   );

@@ -25,6 +25,7 @@ export default function App() {
   const [phraseMode, setPhraseMode] = useState(false);
   const [phraseHighlights, setPhraseHighlights] = useState<any[]>([]);
   const [phraseLists, setPhraseLists] = useState<PhraseList[]>([]);
+  const [chatWordClick, setChatWordClick] = useState(localStorage.getItem('chat_word_click') !== 'false');
 
   // Word Popup
   const [wordPopup, setWordPopup] = useState<WordPopupData | null>(null);
@@ -404,6 +405,8 @@ export default function App() {
               : activeTab === 'vocab' ? `vocab_${selectedVocabId}`
               : 'bookmarks_session'
             }
+            onWordClick={chatWordClick ? (word, x, y) => setWordPopup({ word, sentence: '', x, y }) : undefined}
+            chatWordClickEnabled={chatWordClick}
           />
         </div>
       </main>
