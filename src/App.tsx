@@ -338,6 +338,18 @@ export default function App() {
               className={`px-2 py-1 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${phraseMode ? 'bg-yellow-200 text-yellow-800' : 'text-slate-400 hover:text-slate-600'}`}
               title="切换短语/单词模式"
             >{scanningPhrases ? <span className="inline-block w-3 h-3 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></span> : null}{phraseMode ? '✏️ 短语' : '🔤 单词'}</button>
+            {phraseMode && (
+              <button onClick={() => {
+                if (!selectedPassage || !apiKey) return;
+                setScanningPhrases(true); setPhraseHighlights([]);
+                const txt = selectedPassage.paragraphs.map(p=>p.sentences.join(' ')).join(' ');
+                fetch('/api/scan-phrases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,apiKey})})
+                  .then(r=>r.json()).then(d=>{
+                    if(d.phrases){ setPhraseHighlights(d.phrases); localStorage.setItem('cet6_phrase_scan_'+selectedPassage.id,JSON.stringify(d.phrases)); }
+                  }).catch(()=>{}).finally(()=>setScanningPhrases(false));
+              }} className="px-1.5 py-1 rounded text-[10px] text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                title="重新扫描短语">🔄</button>
+            )}
           </div>
           {activeTab === 'exams' && selectedPassage ? (
             <MainViewer

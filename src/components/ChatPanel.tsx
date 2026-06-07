@@ -6,21 +6,27 @@ import Markdown from 'react-markdown';
 import SettingsModal from './SettingsModal';
 
 // Clickable word wrapper for chat — double-click only (stricter)
+// Custom text renderer for Markdown: makes words double-clickable while keeping formatting
+function ClickableMarkdownText({ children, onWordClick }: { children?: React.ReactNode; onWordClick?: (word: string, x: number, y: number) => void }) {
+  const lastClick = useRef(0);
+  if (!onWordClick || typeof children !== 'string') return <>{children}</>;
+  const parts = children.split(/\b/);
+  return <>{parts.map((p, i) => {
+    if (/^[a-zA-Z]{2,}$/.test(p)) {
+      return <span key={i} onDoubleClick={(e) => {
+        const r = (e.target as HTMLElement).getBoundingClientRect();
+        onWordClick(p, r.left, r.bottom);
+      }} className="cursor-pointer hover:bg-blue-200 hover:text-blue-800 rounded-sm px-[1px] transition-colors" title="双击查词">{p}</span>;
+    }
+    return <span key={i}>{p}</span>;
+  })}</>;
+}
+
 function ClickableText({ text, onWordClick }: { text: string; onWordClick: (word: string, x: number, y: number) => void }) {
   const parts = text.split(/\b/);
-  let lastClick = useRef(0);
-  const handleDoubleClick = useCallback((word: string, e: React.MouseEvent) => {
-    const now = Date.now();
-    if (now - lastClick.current < 400) {
-      const rect = (e.target as HTMLElement).getBoundingClientRect();
-      onWordClick(word, rect.left, rect.bottom);
-    }
-    lastClick.current = now;
-  }, [onWordClick]);
-
   return <span>{parts.map((p, i) => {
     if (/^[a-zA-Z]{2,}$/.test(p)) {
-      return <span key={i} onClick={(e) => handleDoubleClick(p, e)} className="cursor-pointer hover:bg-blue-200 hover:text-blue-800 rounded-sm px-[1px] transition-colors" title="双击查词">{p}</span>;
+      return <span key={i} onDoubleClick={(e) => { const r=(e.target as HTMLElement).getBoundingClientRect(); onWordClick(p, r.left, r.bottom); }} className="cursor-pointer hover:bg-blue-200 hover:text-blue-800 rounded-sm px-[1px] transition-colors" title="双击查词">{p}</span>;
     }
     return <span key={i}>{p}</span>;
   })}</span>;
@@ -213,7 +219,9 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
                       </div>
                     )}
                     <div className="markdown-body space-y-2 text-[15px] leading-relaxed break-words">
-                      <Markdown>{msg.content}</Markdown>
+                      <Markdown components={chatWordClickEnabled && onWordClick ? {
+                        text: ({ children }) => <ClickableMarkdownText onWordClick={onWordClick}>{children}</ClickableMarkdownText>
+                      } : {}}>{msg.content}</Markdown>
                     </div>
                  </div>
               ) : isCollapsed ? (
