@@ -48,33 +48,32 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
     <span className="inline">
       {parts.map((part, i) => {
         if (/^[a-zA-Z]{2,}$/.test(part)) {
-          // Check phrase highlighting — simple word-in-phrase match
+          // In phrase mode: only highlighted phrases are clickable
           let hlStyle: React.CSSProperties = {};
+          let phraseMatch: any = null;
           if (phraseMode && phraseHighlights && phraseHighlights.length > 0) {
-            const match = phraseHighlights.find((h: any) => {
+            phraseMatch = phraseHighlights.find((h: any) => {
               return h.phrase && h.phrase.toLowerCase().includes(part.toLowerCase());
             });
-            if (match) hlStyle = { backgroundColor: match.color, borderRadius: '3px', padding: '1px 2px' };
+            if (phraseMatch) hlStyle = { backgroundColor: phraseMatch.color, borderRadius: '3px', padding: '1px 2px' };
           }
+          const clickable = !phraseMode || !!phraseMatch;
           return (
             <span
               key={i}
-              onClick={(e) => { e.stopPropagation(); const r=(e.target as HTMLElement).getBoundingClientRect();
-                // In phrase mode, if this word is part of a phrase, show phrase info
-                if (hlStyle.backgroundColor && phraseHighlights) {
-                  const phraseMatch = phraseHighlights.find((h: any) => h.phrase && h.phrase.toLowerCase().includes(part.toLowerCase()));
-                  if (phraseMatch) {
-                    // Store phrase def for WordPopup
-                    (window as any).__phraseDef = phraseMatch.definition;
-                    onWordClick(phraseMatch.phrase, text, r.left, r.bottom);
-                  } else onWordClick(part, text, r.left, r.bottom);
+              onClick={(e) => {
+                if (!clickable) return;
+                e.stopPropagation(); const r=(e.target as HTMLElement).getBoundingClientRect();
+                if (phraseMatch) {
+                  (window as any).__phraseDef = phraseMatch.definition;
+                  onWordClick(phraseMatch.phrase, text, r.left, r.bottom);
                 } else onWordClick(part, text, r.left, r.bottom);
               }}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={(e) => handleTouchEnd(e, part, text)}
-              className="cursor-pointer hover:bg-blue-500 hover:text-white active:bg-blue-600 rounded-sm px-[1px] transition-colors touch-manipulation"
+              onTouchStart={clickable ? handleTouchStart : undefined}
+              onTouchEnd={clickable ? ((e) => handleTouchEnd(e, part, text)) : undefined}
+              className={`${clickable ? 'cursor-pointer hover:bg-blue-500 hover:text-white active:bg-blue-600' : 'cursor-default'} rounded-sm px-[1px] transition-colors touch-manipulation`}
               style={hlStyle}
-              title={hlStyle.backgroundColor ? '点击查看短语详解' : '点击查词'}
+              title={phraseMatch ? '点击查看短语详解' : phraseMode ? '' : '点击查词'}
             >
               {part}
             </span>
