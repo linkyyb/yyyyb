@@ -11,14 +11,34 @@ export default function GlobalProgressIndicator() {
     const unsub = taskManager.subscribe(() => {
       const allTasks = taskManager.getTasks();
       setTasks([...allTasks]);
-      // Auto open if there is a new task running or errored
       if (allTasks.some(t => t.status === 'running' || t.status === 'error')) {
         setIsOpen(true);
       }
+      // Auto-dismiss completed/error tasks after 8 seconds
+      const now = Date.now();
+      allTasks.forEach(t => {
+        if ((t.status === 'completed' || t.status === 'error') && now - t.startTime > 8000) {
+          taskManager.removeTask(t.id);
+        }
+      });
     });
-    return () => { unsub(); };
+    // Periodic cleanup
+    const interval = setInterval(() => {
+      const allTasks = taskManager.getTasks();
+      const now = Date.now();
+      let changed = false;
+      allTasks.forEach(t => {
+        if ((t.status === 'completed' || t.status === 'error') && now - t.startTime > 8000) {
+          taskManager.removeTask(t.id);
+          changed = true;
+        }
+      });
+      if (!changed && allTasks.length === 0) clearInterval(interval);
+    }, 3000);
+    return () => { unsub(); clearInterval(interval); };
   }, []);
 
+  // Hide when all tasks are gone or all are done for > 8 seconds
   if (tasks.length === 0) return null;
 
   const runningTasksCount = tasks.filter(t => t.status === 'running').length;

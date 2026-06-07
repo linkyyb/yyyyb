@@ -19,6 +19,8 @@ export default function App() {
   const [vocabLists, setVocabLists] = useState<VocabList[]>([]);
   const [selectedVocabId, setSelectedVocabId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'exams' | 'bookmarks' | 'vocab'>('exams');
+  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [fontSize, setFontSize] = useState(parseInt(localStorage.getItem('cet_font_size') || '16'));
 
   // Word Popup
   const [wordPopup, setWordPopup] = useState<WordPopupData | null>(null);
@@ -256,28 +258,47 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <AppSidebar
-        exams={exams}
-        selectedExamId={selectedExamId}
-        selectedPassageId={selectedPassageId}
-        onSelect={handleSelectPassage}
-        onUpload={handleUploadExam}
-        onDeleteExam={handleDeleteExam}
-        bookmarks={bookmarks}
-        vocabLists={vocabLists}
-        selectedVocabId={selectedVocabId}
-        onSelectVocab={handleSelectVocab}
-        onUploadVocab={handleUploadVocab}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onReviewBookmark={handleReviewBookmark}
-        onDeleteBookmark={handleDeleteBookmark}
-        onDeleteVocab={handleDeleteVocab}
-        completedQuestions={completedQuestions}
-      />
+      {sidebarVisible && (
+        <AppSidebar
+          exams={exams}
+          selectedExamId={selectedExamId}
+          selectedPassageId={selectedPassageId}
+          onSelect={handleSelectPassage}
+          onUpload={handleUploadExam}
+          onDeleteExam={handleDeleteExam}
+          bookmarks={bookmarks}
+          vocabLists={vocabLists}
+          selectedVocabId={selectedVocabId}
+          onSelectVocab={handleSelectVocab}
+          onUploadVocab={handleUploadVocab}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onReviewBookmark={handleReviewBookmark}
+          onDeleteBookmark={handleDeleteBookmark}
+          onDeleteVocab={handleDeleteVocab}
+          completedQuestions={completedQuestions}
+        />
+      )}
       <main className="flex-1 flex overflow-hidden">
+        {/* Sidebar toggle + Font size */}
+        <div className="absolute top-2 left-2 z-50 flex items-center gap-1">
+          <button
+            onClick={() => setSidebarVisible(!sidebarVisible)}
+            className="p-1.5 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-100 transition-colors text-slate-500"
+            title={sidebarVisible ? '隐藏侧边栏' : '显示侧边栏'}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          </button>
+          <select
+            value={fontSize}
+            onChange={(e) => { const v=parseInt(e.target.value); setFontSize(v); localStorage.setItem('cet_font_size', String(v)); }}
+            className="p-1 bg-white border border-slate-200 rounded text-xs text-slate-600"
+          >
+            {[12,14,16,18,20,22,24].map(s => <option key={s} value={s}>{s}px</option>)}
+          </select>
+        </div>
         {/* Left: Reading Area */}
-        <div className="w-1/2 h-full overflow-y-auto border-r border-slate-200 bg-white">
+        <div className={`${sidebarVisible ? 'w-1/2' : 'w-[60%]'} h-full overflow-y-auto border-r border-slate-200 bg-white transition-all`} style={{fontSize: fontSize+'px'}}>
           {activeTab === 'exams' && selectedPassage ? (
             <MainViewer
               passage={selectedPassage}
