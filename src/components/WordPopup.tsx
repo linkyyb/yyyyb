@@ -35,14 +35,17 @@ interface WordPopupProps {
   y: number;
   vocabLists: VocabList[];
   apiKey: string;
+  wordCache: Map<string, WordLookupResult>;
+  onCacheUpdate: (word: string, data: WordLookupResult) => void;
   onClose: () => void;
-  onAddToVocab: (word: string, definition: string, sentence: string) => void;
+  onAddToVocab: (word: string, definition: string, sentence: string, richData?: WordLookupResult) => void;
   onDeepAsk: (word: string, sentence: string) => void;
 }
 
-export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, onClose, onAddToVocab, onDeepAsk }: WordPopupProps) {
-  const [lookup, setLookup] = useState<WordLookupResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wordCache, onCacheUpdate, onClose, onAddToVocab, onDeepAsk }: WordPopupProps) {
+  const cached = wordCache.get(word.toLowerCase());
+  const [lookup, setLookup] = useState<WordLookupResult | null>(cached || null);
+  const [isLoading, setIsLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const [popupStyle, setPopupStyle] = useState<React.CSSProperties>({});
@@ -73,18 +76,18 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, on
     setPopupStyle({ position: 'fixed', left, top, zIndex: 100 });
   }, [x, y]);
 
-  // Fetch AI data
+  // Fetch AI data — skip if cached or vocab has rich data
   useEffect(() => {
     if (!apiKey) return;
-    if (existingEntry?.definitions?.length && existingEntry?.examples?.length) return; // Already have rich data
-    setIsLoading(true);
-    fetch('/api/word-examples', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ word, sentence, apiKey }),
-    })
+    if (existingEntry?.definitions?.length || existingEntry?.examples?.length) {
+      setLookup({ word, definition: existingEntry.definition || '', phoneticUK: existingEntry.phoneticUK, phoneticUS: existingEntry.phoneticUS, definitions: existingEntry.definitions, examples: (existingEntry.examples||[]).map(e => `${e.en} —— ${e.zh}`), synonyms: existingEntry.synonyms, phrases: existingEntry.phrases, mnemonic: existingEntry.mnemonic });
+      setIsLoading(false); return;
+    }
+    if (cached) { setIsLoading(false); return; }
+    setIsLoading(true); setError(null);
+    fetch('/api/word-examples', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ word, sentence, apiKey }) })
       .then((r) => r.json())
-      .then((data) => { if (data.definition || data.examples?.length) setLookup(data); })
+      .then((data) => { if (data.definition || data.examples?.length) { const wl: WordLookupResult = { word, ...data }; setLookup(wl); onCacheUpdate(word, wl); } })
       .catch(() => setError('例句加载失败'))
       .finally(() => setIsLoading(false));
   }, [word, sentence, apiKey]);
@@ -233,7 +236,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, on
 
       {/* Actions */}
       <div className="flex border-t border-slate-100 shrink-0">
-        <button onClick={() => { onAddToVocab(word, displayDefinition, sentence); onClose(); }}
+        <button onClick={() => { onAddToVocab(word, displayDefinition, sentence, lookup || (existingEntry as any) || undefined); onClose(); }}
           className="flex-1 py-2.5 text-xs font-bold text-green-600 hover:bg-green-50 transition-colors flex items-center justify-center gap-1.5 border-r border-slate-100">
           <BookmarkPlus className="w-3.5 h-3.5" />{existingEntry ? '已收藏 ✓' : '加入词汇本'}
         </button>

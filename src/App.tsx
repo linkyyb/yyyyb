@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { examPapers as builtInExams } from './data/exams';
-import { Passage, ExamPaper, Bookmark, VocabList, WordPopupData, PainRecord, defaultPainRecord, QuestionType } from './types';
+import { Passage, ExamPaper, Bookmark, VocabList, WordPopupData, PainRecord, defaultPainRecord, QuestionType, WordLookupResult } from './types';
 import AppSidebar from './components/AppSidebar';
 import MainViewer from './components/MainViewer';
 import ChatPanel from './components/ChatPanel';
@@ -21,6 +21,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'exams' | 'bookmarks' | 'vocab'>('exams');
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [fontSize, setFontSize] = useState(parseInt(localStorage.getItem('cet_font_size') || '16'));
+  const [wordCache, setWordCache] = useState<Map<string, WordLookupResult>>(new Map());
 
   // Word Popup
   const [wordPopup, setWordPopup] = useState<WordPopupData | null>(null);
@@ -134,7 +135,7 @@ export default function App() {
   };
 
   // ── Add word to vocab (from popup) ──
-  const handleAddToVocab = (word: string, definition: string, sentence: string) => {
+  const handleAddToVocab = (word: string, definition: string, sentence: string, richData?: WordLookupResult) => {
     // Check if already exists
     const exists = vocabLists.some((l) => l.words.some((w) => w.word.toLowerCase() === word.toLowerCase()));
     if (exists) return;
@@ -147,7 +148,7 @@ export default function App() {
           ...updated[0],
           words: [
             ...updated[0].words,
-            { id: uuidv4(), word, definition, context: sentence },
+            { id: uuidv4(), word, definition, context: sentence, phoneticUK: richData?.phoneticUK, phoneticUS: richData?.phoneticUS, definitions: richData?.definitions, examples: richData?.examples?.map(e => typeof e === 'string' ? { en: e.split(' —— ')[0] || e, zh: e.split(' —— ')[1] || '' } : e), synonyms: richData?.synonyms, phrases: richData?.phrases, mnemonic: richData?.mnemonic },
           ],
         };
         return updated;
@@ -157,7 +158,7 @@ export default function App() {
         id: `vocab-${uuidv4()}`,
         title: '我的词汇本',
         createdAt: Date.now(),
-        words: [{ id: uuidv4(), word, definition, context: sentence }],
+        words: [{ id: uuidv4(), word, definition, context: sentence, phoneticUK: richData?.phoneticUK, phoneticUS: richData?.phoneticUS, definitions: richData?.definitions, examples: richData?.examples?.map(e => typeof e === 'string' ? { en: e.split(' —— ')[0] || e, zh: e.split(' —— ')[1] || '' } : e), synonyms: richData?.synonyms, phrases: richData?.phrases, mnemonic: richData?.mnemonic }],
       };
       setVocabLists([newList]);
       setSelectedVocabId(newList.id);
@@ -370,6 +371,8 @@ export default function App() {
           y={wordPopup.y}
           vocabLists={vocabLists}
           apiKey={apiKey}
+          wordCache={wordCache}
+          onCacheUpdate={(w,d) => { setWordCache(prev => { const m = new Map(prev); m.set(w.toLowerCase(), d); return m; }); }}
           onClose={() => setWordPopup(null)}
           onAddToVocab={handleAddToVocab}
           onDeepAsk={handleDeepAskWord}
