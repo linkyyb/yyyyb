@@ -113,6 +113,12 @@ export interface WordPhrase {
   meaning: string;
 }
 
+export interface Derivative {
+  word: string;
+  pos: string;
+  meaning: string;
+}
+
 export interface WordItem {
   id: string;
   word: string;
@@ -132,6 +138,8 @@ export interface WordItem {
   phrases?: WordPhrase[];
   /** Memory aid */
   mnemonic?: string;
+  /** Derived words (e.g., inference, inferential for "infer") */
+  derivatives?: Derivative[];
   /** Source context */
   context?: string;
 }
@@ -162,6 +170,7 @@ export interface WordLookupResult {
   synonyms?: string[];
   phrases?: WordPhrase[];
   mnemonic?: string;
+  derivatives?: Derivative[];
 }
 
 // ─── Learning Pain Points ───

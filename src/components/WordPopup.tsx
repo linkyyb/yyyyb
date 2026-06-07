@@ -112,6 +112,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
   const aiExamples: string[] = lookup?.examples || [];
   const syns: string[] = existingEntry?.synonyms || lookup?.synonyms || [];
   const phrases: WordPhrase[] = existingEntry?.phrases || lookup?.phrases || [];
+  const derivatives = existingEntry?.derivatives || lookup?.derivatives || [];
   const mnemonic = existingEntry?.mnemonic || lookup?.mnemonic || '';
   const phoneticUK = existingEntry?.phoneticUK || lookup?.phoneticUK || '';
   const phoneticUS = existingEntry?.phoneticUS || lookup?.phoneticUS || '';
@@ -215,6 +216,22 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
                 <span className="text-slate-500">{p.meaning}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Derivatives */}
+        {derivatives.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">🌿 派生词</p>
+            <div className="flex flex-wrap gap-1.5">
+              {derivatives.map((d,i) => (
+                <span key={i} className="px-2 py-1 bg-teal-50 text-teal-700 text-xs rounded-lg flex items-center gap-1">
+                  <span className="font-bold">{d.word}</span>
+                  <span className="text-[9px] text-teal-500">{d.pos}.</span>
+                  <span className="text-[10px]">{d.meaning}</span>
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
