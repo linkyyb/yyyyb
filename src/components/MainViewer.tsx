@@ -63,8 +63,11 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
                 // In phrase mode, if this word is part of a phrase, show phrase info
                 if (hlStyle.backgroundColor && phraseHighlights) {
                   const phraseMatch = phraseHighlights.find((h: any) => h.phrase && h.phrase.toLowerCase().includes(part.toLowerCase()));
-                  if (phraseMatch) onWordClick(phraseMatch.phrase, text, r.left, r.bottom);
-                  else onWordClick(part, text, r.left, r.bottom);
+                  if (phraseMatch) {
+                    // Store phrase def for WordPopup
+                    (window as any).__phraseDef = phraseMatch.definition;
+                    onWordClick(phraseMatch.phrase, text, r.left, r.bottom);
+                  } else onWordClick(part, text, r.left, r.bottom);
                 } else onWordClick(part, text, r.left, r.bottom);
               }}
               onTouchStart={handleTouchStart}

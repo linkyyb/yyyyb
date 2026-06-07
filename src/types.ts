@@ -181,6 +181,7 @@ export interface WordPopupData {
   x: number;
   y: number;
   isPhrase?: boolean;
+  phraseDefinition?: string;
 }
 
 // ─── AI Word Lookup Result ───

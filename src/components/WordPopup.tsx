@@ -76,9 +76,14 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
     setPopupStyle({ position: 'fixed', left, top, zIndex: 100 });
   }, [x, y]);
 
-  // Fetch AI data — skip if cached or vocab has rich data
+  // Check for pre-scanned phrase definition
+  const phraseDef = (window as any).__phraseDef as string | undefined;
+  const isPhrase = word.includes(' ') && word.length > 5;
+
+  // Fetch AI data — skip if cached or vocab has rich data or phrase definition exists
   useEffect(() => {
     if (!apiKey) return;
+    if (phraseDef) { setLookup({ word, definition: phraseDef, examples: [] }); delete (window as any).__phraseDef; setIsLoading(false); return; }
     if (existingEntry?.definitions?.length || existingEntry?.examples?.length) {
       setLookup({ word, definition: existingEntry.definition || '', phoneticUK: existingEntry.phoneticUK, phoneticUS: existingEntry.phoneticUS, definitions: existingEntry.definitions, examples: (existingEntry.examples||[]).map(e => `${e.en} —— ${e.zh}`), synonyms: existingEntry.synonyms, phrases: existingEntry.phrases, mnemonic: existingEntry.mnemonic });
       setIsLoading(false); return;
@@ -124,6 +129,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
       <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-bold text-base text-slate-800 truncate">{word}</span>
+          {isPhrase && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full font-bold shrink-0">短语</span>}
           {existingEntry && (
             <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold shrink-0">
               词汇本{existingEntry.matchType === 'derived' ? `←${existingEntry.originalForm}` : ''}
