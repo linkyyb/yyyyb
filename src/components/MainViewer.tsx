@@ -157,17 +157,6 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
               passageTitle={passage.title}
             />
           ))}
-          {phraseMode && onScanParagraph && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                const paraText = para.sentences.join(' ');
-                onScanParagraph(paraText, (newPhrases) => { /* parent updates highlights */ });
-              }}
-              className="absolute -right-2 top-0 p-1 rounded-full bg-yellow-100 hover:bg-yellow-200 text-yellow-600 text-xs transition-colors"
-              title="扫描此段短语"
-            >🔍</button>
-          )}
         </p>
       ))}
     </div>
