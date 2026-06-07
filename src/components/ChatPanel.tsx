@@ -33,6 +33,7 @@ interface ChatPanelProps {
   chatSessionId: string;
   onWordClick?: (word: string, x: number, y: number) => void;
   chatWordClickEnabled?: boolean;
+  setChatWordClickEnabled?: (v: boolean) => void;
 }
 
 function makeSummary(text: string): string {
@@ -41,7 +42,7 @@ function makeSummary(text: string): string {
   return cleaned.substring(0, 55) + '...';
 }
 
-export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend, chatSessionId, onWordClick, chatWordClickEnabled }: ChatPanelProps) {
+export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend, chatSessionId, onWordClick, chatWordClickEnabled, setChatWordClickEnabled }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -315,7 +316,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         isThinkingMode={isThinkingMode}
         setIsThinkingMode={setIsThinkingMode}
         chatWordClick={chatWordClickEnabled}
-        setChatWordClick={(v) => { localStorage.setItem('chat_word_click', String(v)); }}
+        setChatWordClick={(v) => { localStorage.setItem('chat_word_click', String(v)); if(setChatWordClickEnabled) setChatWordClickEnabled(v); }}
       />
     </>
   );

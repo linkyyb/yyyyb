@@ -407,6 +407,7 @@ export default function App() {
             }
             onWordClick={chatWordClick ? (word, x, y) => setWordPopup({ word, sentence: '', x, y }) : undefined}
             chatWordClickEnabled={chatWordClick}
+            setChatWordClickEnabled={setChatWordClick}
           />
         </div>
       </main>
