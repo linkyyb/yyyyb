@@ -213,7 +213,9 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
                       </div>
                     )}
                     <div className="markdown-body space-y-2 text-[15px] leading-relaxed break-words">
-                      <Markdown>{msg.content}</Markdown>
+                      {chatWordClickEnabled && onWordClick
+                        ? <ClickableText text={msg.content} onWordClick={onWordClick} />
+                        : <Markdown>{msg.content}</Markdown>}
                     </div>
                  </div>
               ) : isCollapsed ? (
