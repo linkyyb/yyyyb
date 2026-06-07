@@ -59,7 +59,14 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
           return (
             <span
               key={i}
-              onClick={(e) => { e.stopPropagation(); const r=(e.target as HTMLElement).getBoundingClientRect(); onWordClick(part,text,r.left,r.bottom); }}
+              onClick={(e) => { e.stopPropagation(); const r=(e.target as HTMLElement).getBoundingClientRect();
+                // In phrase mode, if this word is part of a phrase, show phrase info
+                if (hlStyle.backgroundColor && phraseHighlights) {
+                  const phraseMatch = phraseHighlights.find((h: any) => h.phrase && h.phrase.toLowerCase().includes(part.toLowerCase()));
+                  if (phraseMatch) onWordClick(phraseMatch.phrase, text, r.left, r.bottom);
+                  else onWordClick(part, text, r.left, r.bottom);
+                } else onWordClick(part, text, r.left, r.bottom);
+              }}
               onTouchStart={handleTouchStart}
               onTouchEnd={(e) => handleTouchEnd(e, part, text)}
               className="cursor-pointer hover:bg-blue-500 hover:text-white active:bg-blue-600 rounded-sm px-[1px] transition-colors touch-manipulation"
