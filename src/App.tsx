@@ -46,7 +46,7 @@ export default function App() {
       const saved = localStorage.getItem('cet6_phrase_scan_'+passageId);
       if (!saved) return null;
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.every((p) => typeof p.startIdx === 'number' && typeof p.endIdx === 'number')) return parsed;
+      if (Array.isArray(parsed) && parsed.every((p) => typeof p.startIdx === 'number' && typeof p.endIdx === 'number' && typeof p.category === 'string')) return parsed;
       localStorage.removeItem('cet6_phrase_scan_'+passageId);
       return null;
     } catch {

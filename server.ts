@@ -315,6 +315,27 @@ async function startServer() {
     }catch(e:any){res.status(500).json({error:"Lookup failed",details:e?.message});}
   });
 
+  app.post("/api/phrase-examples",async(req,res)=>{
+    try{
+      const {phrase,sentence,definition,category,apiKey}=req.body;
+      if(!apiKey||!phrase) return res.status(400).json({error:"API Key required"});
+      const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
+      const prompt=`Explain an English phrase for CET-4/CET-6 intensive reading. Output ONLY JSON:
+{"phrase":"base phrase","definition":"Chinese meaning and usage summary","category":"verb_phrase/preposition_collocation/fixed_noun_phrase/pure_prepositional_phrase","definitions":[{"pos":"category","meaning":"usage point in Chinese"}],"examples":["English example —— Chinese translation","English example —— Chinese translation"],"synonyms":["near expression"],"phrases":[{"phrase":"related phrase","meaning":"Chinese meaning"}],"mnemonic":"short memory note"}.
+Requirements:
+- Explain the whole phrase, not individual words.
+- If the text uses an inflected phrase, show the base phrase in "phrase".
+- Include 2 CET-style examples and explain usage in Chinese.
+- Keep the answer concise but useful.`;
+      const user=sentence?`Phrase:"${phrase}"\nCategory:"${category||''}"\nExisting meaning:"${definition||''}"\nContext:"${sentence}"`:`Phrase:"${phrase}"\nCategory:"${category||''}"\nExisting meaning:"${definition||''}"`;
+      const c=await (o.chat.completions.create as any)({model:'deepseek-v4-flash',messages:[{role:"system",content:prompt},{role:"user",content:user}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
+      let raw=c.choices[0].message.content||'{}';
+      raw=raw.trim().replace(/^```json\s*\n?/i,'').replace(/\n?```\s*$/,'');
+      const p=JSON.parse(raw);
+      res.json({word:p.phrase||phrase,definition:p.definition||definition||'',definitions:p.definitions||[{pos:p.category||category||'phrase',meaning:p.definition||definition||''}],examples:p.examples||[],synonyms:p.synonyms||[],phrases:p.phrases||[],mnemonic:p.mnemonic||'',category:p.category||category||''});
+    }catch(e:any){res.status(500).json({error:"Phrase lookup failed",details:e?.message});}
+  });
+
   // Phrase scan — chunked approach for better coverage
   function escapePhraseRegex(value:string){
     return value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -335,16 +356,33 @@ async function startServer() {
     return null;
   }
 
-  function phraseQuality(phrase:string){
+  function normalizePhraseCategory(category:string, phrase:string){
+    const c=String(category||'').toLowerCase().replace(/[\s-]+/g,'_');
+    if(['verb_phrase','phrasal_verb','verb_collocation'].includes(c)) return 'verb_phrase';
+    if(['preposition_collocation','prep_collocation','prepositional_collocation'].includes(c)) return 'preposition_collocation';
+    if(['fixed_noun_phrase','noun_phrase','noun_collocation'].includes(c)) return 'fixed_noun_phrase';
+    if(['pure_prepositional_phrase','prepositional_phrase'].includes(c)) return 'pure_prepositional_phrase';
+    const words=phrase.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const preps=['of','for','to','with','from','in','on','at','by','into','about','over','under','against','among','between','through'];
+    if(preps.includes(words[0])) return 'pure_prepositional_phrase';
+    if(words.some(w=>preps.includes(w))) return 'preposition_collocation';
+    return 'fixed_noun_phrase';
+  }
+
+  function phraseQuality(phrase:string, category:string=''){
     const p=phrase.toLowerCase().trim();
     const words=p.split(/\s+/).filter(Boolean);
     if(words.length<2||words.length>7) return false;
     if(words.some(w=>w.length<2)) return false;
     if(/^\d/.test(p)) return false;
+    const normalizedCategory=normalizePhraseCategory(category,p);
     const weak=new Set(['the','a','an','this','that','these','those','every','each','some','many','much','most','more','less']);
-    if(weak.has(words[0])&&words.length<3) return false;
     const preps=['of','for','to','with','from','in','on','at','by','into','about','over','under','against','among','between','through'];
+    if(weak.has(words[0])&&words.length<3) return false;
     if(words.length===2&&preps.includes(words[0])&&weak.has(words[1])) return false;
+    if(normalizedCategory==='pure_prepositional_phrase') return preps.includes(words[0])&&words.length<=5;
+    if(normalizedCategory==='fixed_noun_phrase') return !preps.includes(words[0])&&words.length<=5;
+    if(normalizedCategory==='verb_phrase') return true;
     if(words.length===2&&preps.includes(words[1])){
       const verbish=new Set(['infer','derive','result','benefit','differ','suffer','stem','lead','refer','relate','contribute','adapt','respond','appeal','apply','amount','object','subscribe','resort','adhere','account','depend','rely','focus','base','cope','deal','consist','insist']);
       const adjish=new Set(['aware','capable','dependent','different','responsible','relevant','similar','subject','vulnerable','essential','critical','beneficial']);
@@ -362,10 +400,11 @@ async function startServer() {
       if(!apiKey||!text) return res.status(400).json({error:"API Key and text required"});
       const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
       const prompt=`You are extracting vocabulary-book style English phrases from CET reading text.
-Return ONLY JSON: {"phrases":[{"phrase":"exact contiguous words copied from the text","baseForm":"dictionary/base form","definition":"Chinese meaning","reason":"collocation/phrasal verb/prepositional phrase/academic expression"}]}.
+Return ONLY JSON: {"phrases":[{"phrase":"exact contiguous words copied from the text","baseForm":"dictionary/base form","category":"verb_phrase | preposition_collocation | fixed_noun_phrase | pure_prepositional_phrase","definition":"Chinese meaning","reason":"why this is useful"}]}.
 Rules:
 - Do NOT force a count. Fewer correct phrases are better than many weak phrases.
-- The phrase must be a meaningful reusable expression, collocation, phrasal verb, idiom, or academic phrase.
+- Prefer a balanced set: verb phrases/phrasal verbs, verb+preposition or adjective+preposition collocations, fixed noun expressions, and pure prepositional phrases.
+- Good examples: "result from", "take into account", "focus on", "associated with", "in terms of", "at risk", "public health", "social media".
 - The phrase must appear as contiguous words in the supplied text. Do not combine words from different parts of a sentence.
 - Do not output isolated single words, random noun chunks, full clauses, names, question text, or phrases longer than 7 words.
 - If the text uses an inflected form, "phrase" must copy the inflected text exactly and "baseForm" should be the dictionary form.`;
@@ -389,11 +428,13 @@ Rules:
           for(const p of phrases){
             if(!p.phrase) continue;
             const hit=findExactPhrase(text,p.phrase);
-            if(!hit||!phraseQuality(hit.phrase)) continue;
+            if(!hit) continue;
+            const category=normalizePhraseCategory(p.category||p.reason||'',hit.phrase);
+            if(!phraseQuality(hit.phrase,category)) continue;
             const key=hit.phrase.toLowerCase();
             if(seen.has(key)) continue;
             seen.add(key);
-            allPhrases.push({phrase:hit.phrase,baseForm:p.baseForm||hit.phrase,definition:p.definition||'',reason:p.reason||'',startIdx:hit.startIdx,endIdx:hit.endIdx});
+            allPhrases.push({phrase:hit.phrase,baseForm:p.baseForm||hit.phrase,category,definition:p.definition||'',reason:p.reason||'',startIdx:hit.startIdx,endIdx:hit.endIdx});
           }
         }catch{}
       }

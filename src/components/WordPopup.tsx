@@ -79,12 +79,57 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
   // Check for pre-scanned phrase definition
   const phraseDef = (window as any).__phraseDef as string | undefined;
   const phraseBase = (window as any).__phraseBase as string | undefined;
+  const phraseCategory = (window as any).__phraseCategory as string | undefined;
+  const phraseReason = (window as any).__phraseReason as string | undefined;
   const isPhrase = word.includes(' ') && word.length > 5;
+
+  const categoryLabel = (category?: string) => {
+    switch (category) {
+      case 'verb_phrase': return '动词短语';
+      case 'preposition_collocation': return '介词搭配';
+      case 'fixed_noun_phrase': return '固定名词短语';
+      case 'pure_prepositional_phrase': return '纯介词短语';
+      default: return category || '短语';
+    }
+  };
 
   // Fetch AI data — skip if cached or vocab has rich data or phrase definition exists
   useEffect(() => {
     if (!apiKey) return;
-    if (phraseDef) { setLookup({ word, definition: phraseDef, examples: [] }); delete (window as any).__phraseDef; setIsLoading(false); return; }
+    if (phraseDef || isPhrase) {
+      if (!cached) {
+        setLookup({
+          word,
+          definition: phraseDef || '',
+          definitions: phraseCategory ? [{ pos: categoryLabel(phraseCategory), meaning: phraseReason || phraseDef || '' }] : undefined,
+          examples: [],
+        });
+      }
+      if (cached?.examples?.length) { setIsLoading(false); return; }
+      setIsLoading(true); setError(null);
+      fetch('/api/phrase-examples', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phrase: phraseBase || word, sentence, definition: phraseDef, category: phraseCategory, apiKey }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.definition || data.examples?.length) {
+            const wl: WordLookupResult = { word, ...data };
+            setLookup(wl);
+            onCacheUpdate(word, wl);
+          }
+        })
+        .catch(() => setError('短语解析加载失败'))
+        .finally(() => {
+          delete (window as any).__phraseDef;
+          delete (window as any).__phraseBase;
+          delete (window as any).__phraseCategory;
+          delete (window as any).__phraseReason;
+          setIsLoading(false);
+        });
+      return;
+    }
     if (existingEntry?.definitions?.length || existingEntry?.examples?.length) {
       setLookup({ word, definition: existingEntry.definition || '', phoneticUK: existingEntry.phoneticUK, phoneticUS: existingEntry.phoneticUS, definitions: existingEntry.definitions, examples: (existingEntry.examples||[]).map(e => `${e.en} —— ${e.zh}`), synonyms: existingEntry.synonyms, phrases: existingEntry.phrases, mnemonic: existingEntry.mnemonic, derivatives: existingEntry.derivatives });
       setIsLoading(false); return;

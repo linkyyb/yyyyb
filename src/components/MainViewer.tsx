@@ -63,6 +63,8 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
     if (phraseMatch) {
       (window as any).__phraseDef = phraseMatch.definition;
       (window as any).__phraseBase = phraseMatch.baseForm || phraseMatch.phrase || wordOrPhrase;
+      (window as any).__phraseCategory = phraseMatch.category || '';
+      (window as any).__phraseReason = phraseMatch.reason || '';
       onWordClick(phraseMatch.baseForm || phraseMatch.phrase || wordOrPhrase, sentence, r.left, r.bottom);
       return;
     }
