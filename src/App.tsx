@@ -41,6 +41,20 @@ export default function App() {
 
   const apiKey = localStorage.getItem('deepseek_api_key') || '';
 
+  const readSavedPhraseScan = (passageId: string) => {
+    try {
+      const saved = localStorage.getItem('cet6_phrase_scan_'+passageId);
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.every((p) => typeof p.startIdx === 'number' && typeof p.endIdx === 'number')) return parsed;
+      localStorage.removeItem('cet6_phrase_scan_'+passageId);
+      return null;
+    } catch {
+      localStorage.removeItem('cet6_phrase_scan_'+passageId);
+      return null;
+    }
+  };
+
   // ── Load from localStorage ──
   useEffect(() => {
     try {
@@ -98,8 +112,7 @@ export default function App() {
     const isPhrase = savedMode === 'phrase';
     setPhraseMode(isPhrase);
     if (isPhrase) {
-      const saved = localStorage.getItem('cet6_phrase_scan_'+passageId);
-      setPhraseHighlights(saved ? JSON.parse(saved) : []);
+      setPhraseHighlights(readSavedPhraseScan(passageId) || []);
     } else {
       setPhraseHighlights([]);
     }
@@ -324,8 +337,8 @@ export default function App() {
                 setPhraseMode(next);
                 if (selectedPassage) localStorage.setItem('cet6_passage_mode_'+selectedPassage.id, next?'phrase':'word');
                 if (next && selectedPassage) {
-                  const saved = localStorage.getItem('cet6_phrase_scan_'+selectedPassage.id);
-                  if (saved) { setPhraseHighlights(JSON.parse(saved)); return; }
+                  const saved = readSavedPhraseScan(selectedPassage.id);
+                  if (saved) { setPhraseHighlights(saved); return; }
                   setScanningPhrases(true);
                   const txt = selectedPassage.paragraphs.map(p=>p.sentences.join(' ')).join(' ');
                   if (apiKey) fetch('/api/scan-phrases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,apiKey})})

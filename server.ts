@@ -316,14 +316,60 @@ async function startServer() {
   });
 
   // Phrase scan — chunked approach for better coverage
+  function escapePhraseRegex(value:string){
+    return value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  }
+
+  function findExactPhrase(text:string, phrase:string){
+    const words=String(phrase||'').trim().split(/\s+/).filter(Boolean);
+    if(words.length<2||words.length>7) return null;
+    const re=new RegExp(words.map(escapePhraseRegex).join('\\s+'),'gi');
+    let m:RegExpExecArray|null;
+    while((m=re.exec(text))!==null){
+      const start=m.index,end=start+m[0].length;
+      const before=start>0?text[start-1]:'';
+      const after=end<text.length?text[end]:'';
+      if(/[A-Za-z]/.test(before)||/[A-Za-z]/.test(after)) continue;
+      return {phrase:m[0].replace(/\s+/g,' '),startIdx:start,endIdx:end};
+    }
+    return null;
+  }
+
+  function phraseQuality(phrase:string){
+    const p=phrase.toLowerCase().trim();
+    const words=p.split(/\s+/).filter(Boolean);
+    if(words.length<2||words.length>7) return false;
+    if(words.some(w=>w.length<2)) return false;
+    if(/^\d/.test(p)) return false;
+    const weak=new Set(['the','a','an','this','that','these','those','every','each','some','many','much','most','more','less']);
+    if(weak.has(words[0])&&words.length<3) return false;
+    const preps=['of','for','to','with','from','in','on','at','by','into','about','over','under','against','among','between','through'];
+    if(words.length===2&&preps.includes(words[0])&&weak.has(words[1])) return false;
+    if(words.length===2&&preps.includes(words[1])){
+      const verbish=new Set(['infer','derive','result','benefit','differ','suffer','stem','lead','refer','relate','contribute','adapt','respond','appeal','apply','amount','object','subscribe','resort','adhere','account','depend','rely','focus','base','cope','deal','consist','insist']);
+      const adjish=new Set(['aware','capable','dependent','different','responsible','relevant','similar','subject','vulnerable','essential','critical','beneficial']);
+      const ingish=new Set(['according','depending','concerning','regarding','leading','resulting','belonging','relating','contributing','stemming','dealing','coping','focusing']);
+      if(!verbish.has(words[0])&&!adjish.has(words[0])&&!ingish.has(words[0])&&!/ed$/.test(words[0])) return false;
+    }
+    const hasUsefulMarker=words.some(w=>preps.includes(w)) || words.some(w=>/ing$|ed$|tion$|ment$|ity$|ive$|ous$|al$|able$|ible$/.test(w));
+    return hasUsefulMarker;
+  }
+
+  // Phrase scan: AI proposes candidates, server validates exact contiguous spans.
   app.post("/api/scan-phrases", async(req,res)=>{
     try{
       const {text,apiKey}=req.body;
       if(!apiKey||!text) return res.status(400).json({error:"API Key and text required"});
       const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
-      const prompt=`Find ALL important English phrases/collocations/idioms in this text. Output JSON format: {"phrases":[{"phrase":"exact words from the text","baseForm":"dictionary form of phrase","definition":"Chinese meaning"}]}. Find at least 8 phrases. Only output phrases that appear EXACTLY in the text. No markdown.`;
+      const prompt=`You are extracting vocabulary-book style English phrases from CET reading text.
+Return ONLY JSON: {"phrases":[{"phrase":"exact contiguous words copied from the text","baseForm":"dictionary/base form","definition":"Chinese meaning","reason":"collocation/phrasal verb/prepositional phrase/academic expression"}]}.
+Rules:
+- Do NOT force a count. Fewer correct phrases are better than many weak phrases.
+- The phrase must be a meaningful reusable expression, collocation, phrasal verb, idiom, or academic phrase.
+- The phrase must appear as contiguous words in the supplied text. Do not combine words from different parts of a sentence.
+- Do not output isolated single words, random noun chunks, full clauses, names, question text, or phrases longer than 7 words.
+- If the text uses an inflected form, "phrase" must copy the inflected text exactly and "baseForm" should be the dictionary form.`;
 
-      // Chunk text into 1500-char pieces with 100-char overlap
       const chunkSize=1500,overlap=100;
       const chunks:string[]=[];
       let i=0;
@@ -333,7 +379,6 @@ async function startServer() {
         i+=chunkSize-overlap;
       }
 
-      // Scan each chunk in parallel
       const allPhrases:any[]=[];
       const seen=new Set<string>();
       for(const chunk of chunks){
@@ -343,15 +388,12 @@ async function startServer() {
           let phrases:any[]=[];try{const p=JSON.parse(raw);phrases=p.phrases||[];}catch{phrases=[];}
           for(const p of phrases){
             if(!p.phrase) continue;
-            // Normalize whitespace for matching (handle line breaks)
-            const normText=text.replace(/\s+/g,' ');
-            const normPhrase=p.phrase.replace(/\s+/g,' ');
-            if(!normText.includes(normPhrase)) continue;
-            const key=normPhrase.toLowerCase();
+            const hit=findExactPhrase(text,p.phrase);
+            if(!hit||!phraseQuality(hit.phrase)) continue;
+            const key=hit.phrase.toLowerCase();
             if(seen.has(key)) continue;
             seen.add(key);
-            p.phrase=normPhrase; // Use normalized form
-            allPhrases.push(p);
+            allPhrases.push({phrase:hit.phrase,baseForm:p.baseForm||hit.phrase,definition:p.definition||'',reason:p.reason||'',startIdx:hit.startIdx,endIdx:hit.endIdx});
           }
         }catch{}
       }

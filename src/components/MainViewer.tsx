@@ -17,12 +17,40 @@ interface MainViewerProps {
 }
 
 // ── Word-level rendering: preserves ALL spacing ──
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function findPhraseRanges(text: string, highlights: any[] = []) {
+  const ranges: { start: number; end: number; highlight: any; text: string }[] = [];
+  const candidates = highlights
+    .filter((h) => h?.phrase && /\s/.test(h.phrase))
+    .sort((a, b) => String(b.phrase).length - String(a.phrase).length);
+  const overlaps = (start: number, end: number) => ranges.some((r) => start < r.end && end > r.start);
+
+  for (const highlight of candidates) {
+    const words = String(highlight.phrase).trim().split(/\s+/).filter(Boolean);
+    if (words.length < 2) continue;
+    const re = new RegExp(words.map(escapeRegExp).join('\\s+'), 'gi');
+    let match: RegExpExecArray | null;
+    while ((match = re.exec(text)) !== null) {
+      const start = match.index;
+      const end = start + match[0].length;
+      const before = start > 0 ? text[start - 1] : '';
+      const after = end < text.length ? text[end] : '';
+      if (/[A-Za-z]/.test(before) || /[A-Za-z]/.test(after) || overlaps(start, end)) continue;
+      ranges.push({ start, end, highlight, text: match[0] });
+    }
+  }
+
+  return ranges.sort((a, b) => a.start - b.start);
+}
+
 function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phraseMode, phraseHighlights, passageTitle }: {
   text: string; onWordClick: (w: string, s: string, x: number, y: number) => void;
   onSentenceClick: (s: string) => void; onBookmark: MainViewerProps['onBookmark'];
   phraseMode?: boolean; phraseHighlights?: any[]; passageTitle: string;
 }) {
-  const parts = text.split(/\b/);
   // Track touch start position to prevent accidental word clicks during scroll
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -30,7 +58,18 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
     touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   };
 
-  const handleTouchEnd = (e: React.TouchEvent, word: string, sentence: string) => {
+  const openPopup = (target: HTMLElement, wordOrPhrase: string, sentence: string, phraseMatch?: any) => {
+    const r = target.getBoundingClientRect();
+    if (phraseMatch) {
+      (window as any).__phraseDef = phraseMatch.definition;
+      (window as any).__phraseBase = phraseMatch.baseForm || phraseMatch.phrase || wordOrPhrase;
+      onWordClick(phraseMatch.baseForm || phraseMatch.phrase || wordOrPhrase, sentence, r.left, r.bottom);
+      return;
+    }
+    onWordClick(wordOrPhrase, sentence, r.left, r.bottom);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent, word: string, sentence: string, phraseMatch?: any) => {
     if (!touchStart.current) return;
     const dx = Math.abs(e.changedTouches[0].clientX - touchStart.current.x);
     const dy = Math.abs(e.changedTouches[0].clientY - touchStart.current.y);
@@ -38,52 +77,57 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
     if (dx < 8 && dy < 8) {
       e.preventDefault();
       e.stopPropagation();
-      const r = (e.target as HTMLElement).getBoundingClientRect();
-      onWordClick(word, sentence, r.left, r.bottom);
+      openPopup(e.target as HTMLElement, word, sentence, phraseMatch);
     }
     touchStart.current = null;
   };
 
+  const renderWordMode = () => text.split(/\b/).map((part, i) => {
+    if (!/^[a-zA-Z]{2,}$/.test(part)) return <span key={i}>{part}</span>;
+    return (
+      <span
+        key={i}
+        onClick={(e) => { e.stopPropagation(); openPopup(e.target as HTMLElement, part, text); }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={(e) => handleTouchEnd(e, part, text)}
+        className="cursor-pointer hover:bg-blue-500 hover:text-white active:bg-blue-600 rounded-sm px-[1px] transition-colors touch-manipulation"
+        title="鐐瑰嚮鏌ヨ瘝"
+      >
+        {part}
+      </span>
+    );
+  });
+
+  const renderPhraseMode = () => {
+    const ranges = findPhraseRanges(text, phraseHighlights);
+    if (ranges.length === 0) return <span>{text}</span>;
+
+    const nodes: React.ReactNode[] = [];
+    let cursor = 0;
+    ranges.forEach((range, idx) => {
+      if (range.start > cursor) nodes.push(<span key={`t-${idx}`}>{text.slice(cursor, range.start)}</span>);
+      nodes.push(
+        <span
+          key={`p-${idx}`}
+          onClick={(e) => { e.stopPropagation(); openPopup(e.target as HTMLElement, range.text, text, range.highlight); }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={(e) => handleTouchEnd(e, range.text, text, range.highlight)}
+          className="cursor-pointer rounded-[3px] px-[2px] transition-colors touch-manipulation hover:ring-2 hover:ring-yellow-300"
+          style={{ backgroundColor: range.highlight.color || 'rgba(255,235,59,0.35)' }}
+          title="Phrase details"
+        >
+          {range.text}
+        </span>
+      );
+      cursor = range.end;
+    });
+    if (cursor < text.length) nodes.push(<span key="tail">{text.slice(cursor)}</span>);
+    return nodes;
+  };
+
   return (
     <span className="inline">
-      {parts.map((part, i) => {
-        if (/^[a-zA-Z]{2,}$/.test(part)) {
-          // In phrase mode: check if the full phrase appears in this sentence
-          let hlStyle: React.CSSProperties = {};
-          let phraseMatch: any = null;
-          if (phraseMode && phraseHighlights && phraseHighlights.length > 0) {
-            const normSentence = text.replace(/\s+/g, ' ').toLowerCase();
-            phraseMatch = phraseHighlights.find((h: any) => {
-              if (!h.phrase) return false;
-              return normSentence.includes(h.phrase.replace(/\s+/g, ' ').toLowerCase());
-            });
-            if (phraseMatch) hlStyle = { backgroundColor: phraseMatch.color, borderRadius: '3px', padding: '1px 2px' };
-          }
-          const clickable = !phraseMode || !!phraseMatch;
-          return (
-            <span
-              key={i}
-              onClick={(e) => {
-                if (!clickable) return;
-                e.stopPropagation(); const r=(e.target as HTMLElement).getBoundingClientRect();
-                if (phraseMatch) {
-                  (window as any).__phraseDef = phraseMatch.definition;
-                  (window as any).__phraseBase = phraseMatch.baseForm || null;
-                  onWordClick(phraseMatch.baseForm || phraseMatch.phrase, text, r.left, r.bottom);
-                } else onWordClick(part, text, r.left, r.bottom);
-              }}
-              onTouchStart={clickable ? handleTouchStart : undefined}
-              onTouchEnd={clickable ? ((e) => handleTouchEnd(e, part, text)) : undefined}
-              className={`${clickable ? 'cursor-pointer hover:bg-blue-500 hover:text-white active:bg-blue-600' : 'cursor-default'} rounded-sm px-[1px] transition-colors touch-manipulation`}
-              style={hlStyle}
-              title={phraseMatch ? '点击查看短语详解' : phraseMode ? '' : '点击查词'}
-            >
-              {part}
-            </span>
-          );
-        }
-        return <span key={i}>{part}</span>;
-      })}
+      {phraseMode ? renderPhraseMode() : renderWordMode()}
       {/* Sentence toolbar — always visible */}
       <span className="inline-flex items-center gap-0.5 ml-2 align-middle">
         <button
