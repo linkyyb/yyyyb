@@ -40,6 +40,8 @@ interface ChatPanelProps {
   onWordClick?: (word: string, x: number, y: number) => void;
   chatWordClickEnabled?: boolean;
   setChatWordClickEnabled?: (v: boolean) => void;
+  wordGrammarAnalysisEnabled?: boolean;
+  setWordGrammarAnalysisEnabled?: (v: boolean) => void;
 }
 
 function makeSummary(text: string): string {
@@ -48,7 +50,7 @@ function makeSummary(text: string): string {
   return cleaned.substring(0, 55) + '...';
 }
 
-export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend, chatSessionId, onWordClick, chatWordClickEnabled, setChatWordClickEnabled }: ChatPanelProps) {
+export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend, chatSessionId, onWordClick, chatWordClickEnabled, setChatWordClickEnabled, wordGrammarAnalysisEnabled, setWordGrammarAnalysisEnabled }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -325,6 +327,8 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         setIsThinkingMode={setIsThinkingMode}
         chatWordClick={chatWordClickEnabled}
         setChatWordClick={(v) => { localStorage.setItem('chat_word_click', String(v)); if(setChatWordClickEnabled) setChatWordClickEnabled(v); }}
+        wordGrammarAnalysis={wordGrammarAnalysisEnabled}
+        setWordGrammarAnalysis={(v) => { localStorage.setItem('word_grammar_analysis', String(v)); if(setWordGrammarAnalysisEnabled) setWordGrammarAnalysisEnabled(v); }}
       />
     </>
   );

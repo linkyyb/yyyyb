@@ -36,17 +36,32 @@ interface WordPopupProps {
   vocabLists: VocabList[];
   apiKey: string;
   wordCache: Map<string, WordLookupResult>;
+  enableGrammarAnalysis?: boolean;
   onCacheUpdate: (word: string, data: WordLookupResult) => void;
   onClose: () => void;
   onAddToVocab: (word: string, definition: string, sentence: string, richData?: WordLookupResult) => void;
   onDeepAsk: (word: string, sentence: string) => void;
 }
 
-export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wordCache, onCacheUpdate, onClose, onAddToVocab, onDeepAsk }: WordPopupProps) {
+interface WordGrammarAnalysis {
+  surfaceForm?: string;
+  baseForm?: string;
+  partOfSpeech?: string;
+  sentenceRole?: string;
+  grammarReason?: string;
+  morphology?: string;
+  structure?: string;
+  replacementWarning?: string;
+}
+
+export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wordCache, enableGrammarAnalysis, onCacheUpdate, onClose, onAddToVocab, onDeepAsk }: WordPopupProps) {
   const cached = wordCache.get(word.toLowerCase());
   const [lookup, setLookup] = useState<WordLookupResult | null>(cached || null);
   const [isLoading, setIsLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
+  const [grammar, setGrammar] = useState<WordGrammarAnalysis | null>(null);
+  const [grammarLoading, setGrammarLoading] = useState(false);
+  const [grammarError, setGrammarError] = useState<string | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const [popupStyle, setPopupStyle] = useState<React.CSSProperties>({});
 
@@ -67,14 +82,15 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
 
   // Position
   useEffect(() => {
-    const pw = 320, ph = 400, vw = window.innerWidth, vh = window.innerHeight;
+    const pw = enableGrammarAnalysis && sentence && !word.includes(' ') ? 560 : 320;
+    const ph = 400, vw = window.innerWidth, vh = window.innerHeight;
     let left = x + 10, top = y - 10;
     if (left + pw > vw - 20) left = x - pw - 10;
     if (top + ph > vh - 20) top = vh - ph - 20;
     if (left < 10) left = 10;
     if (top < 10) top = 10;
     setPopupStyle({ position: 'fixed', left, top, zIndex: 100 });
-  }, [x, y]);
+  }, [x, y, word, sentence, enableGrammarAnalysis]);
 
   // Check for pre-scanned phrase definition
   const phraseDef = (window as any).__phraseDef as string | undefined;
@@ -82,6 +98,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
   const phraseCategory = (window as any).__phraseCategory as string | undefined;
   const phraseReason = (window as any).__phraseReason as string | undefined;
   const isPhrase = word.includes(' ') && word.length > 5;
+  const showGrammarPanel = !!enableGrammarAnalysis && !!apiKey && !!sentence && !isPhrase && /^[A-Za-z][A-Za-z'-]*$/.test(word);
 
   const categoryLabel = (category?: string) => {
     switch (category) {
@@ -143,6 +160,30 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
       .finally(() => setIsLoading(false));
   }, [word, sentence, apiKey]);
 
+  useEffect(() => {
+    if (!showGrammarPanel) {
+      setGrammar(null);
+      setGrammarLoading(false);
+      setGrammarError(null);
+      return;
+    }
+    setGrammar(null);
+    setGrammarLoading(true);
+    setGrammarError(null);
+    fetch('/api/word-grammar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word, sentence, apiKey }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && !data.error) setGrammar(data);
+        else setGrammarError(data?.details || data?.error || '词形语法解析失败');
+      })
+      .catch(() => setGrammarError('词形语法解析失败'))
+      .finally(() => setGrammarLoading(false));
+  }, [word, sentence, apiKey, showGrammarPanel]);
+
   // ESC
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -170,7 +211,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
   const displayDefinition = existingEntry?.definition || lookup?.definition || '';
 
   return (
-    <div ref={popupRef} style={popupStyle} className="w-[320px] max-h-[450px] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+    <div ref={popupRef} style={popupStyle} className={`${showGrammarPanel ? 'w-[560px]' : 'w-[320px]'} max-h-[450px] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
@@ -191,7 +232,8 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
       </div>
 
       {/* Body */}
-      <div className="p-4 space-y-3 overflow-y-auto flex-1 text-sm">
+      <div className={`p-4 overflow-y-auto flex-1 text-sm ${showGrammarPanel ? 'grid grid-cols-[minmax(0,1fr)_220px] gap-4' : 'space-y-3'}`}>
+        <div className="space-y-3 min-w-0">
         {/* Phonetics */}
         {(phoneticUK || phoneticUS) && (
           <div className="flex items-center gap-3 text-xs text-slate-500">
@@ -305,6 +347,42 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
           <p className="text-[10px] text-slate-400 italic border-t border-slate-100 pt-2">
             原文：...{sentence.substring(0, 80)}{sentence.length > 80 ? '...' : ''}
           </p>
+        )}
+        </div>
+
+        {showGrammarPanel && (
+          <aside className="border-l border-slate-100 pl-4 space-y-2 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">词形语法</p>
+              {grammarLoading && <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin" />}
+            </div>
+            {grammarError && <p className="text-xs text-red-400">{grammarError}</p>}
+            {!grammarLoading && !grammarError && grammar && (
+              <div className="space-y-2">
+                <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-2">
+                  <p className="text-[10px] text-indigo-400 font-bold mb-1">当前词形</p>
+                  <p className="text-xs text-slate-700">
+                    <span className="font-bold">{grammar.surfaceForm || word}</span>
+                    {grammar.baseForm && grammar.baseForm !== (grammar.surfaceForm || word) && <span className="text-slate-400"> ← {grammar.baseForm}</span>}
+                  </p>
+                </div>
+                {grammar.partOfSpeech && <p className="text-xs text-slate-600"><span className="font-bold text-slate-500">词性：</span>{grammar.partOfSpeech}</p>}
+                {grammar.sentenceRole && <p className="text-xs text-slate-600"><span className="font-bold text-slate-500">句中成分：</span>{grammar.sentenceRole}</p>}
+                {grammar.morphology && <p className="text-xs text-slate-600"><span className="font-bold text-slate-500">形态：</span>{grammar.morphology}</p>}
+                {grammar.grammarReason && (
+                  <div className="rounded-lg bg-slate-50 border border-slate-100 p-2">
+                    <p className="text-[10px] text-slate-400 font-bold mb-1">为什么用这个词形</p>
+                    <p className="text-xs text-slate-700 leading-relaxed">{grammar.grammarReason}</p>
+                  </div>
+                )}
+                {grammar.structure && <p className="text-xs text-slate-500 leading-relaxed">{grammar.structure}</p>}
+                {grammar.replacementWarning && (
+                  <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-2 leading-relaxed">{grammar.replacementWarning}</p>
+                )}
+              </div>
+            )}
+            {!grammarLoading && !grammarError && !grammar && <p className="text-xs text-slate-400">暂无词形语法解析。</p>}
+          </aside>
         )}
       </div>
 

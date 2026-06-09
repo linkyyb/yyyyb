@@ -336,6 +336,25 @@ Requirements:
     }catch(e:any){res.status(500).json({error:"Phrase lookup failed",details:e?.message});}
   });
 
+  app.post("/api/word-grammar",async(req,res)=>{
+    try{
+      const {word,sentence,apiKey}=req.body;
+      if(!apiKey||!word||!sentence) return res.status(400).json({error:"API Key, word, and sentence required"});
+      const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
+      const prompt=`Analyze why the clicked English word has this exact form in the sentence. Output ONLY JSON:
+{"surfaceForm":"clicked form","baseForm":"dictionary/base form","partOfSpeech":"part of speech here","sentenceRole":"subject/object/predicate/complement/modifier/etc in Chinese","grammarReason":"why this exact form is required here in Chinese","morphology":"tense/number/person/voice/degree/gerund/participle/etc in Chinese","structure":"brief sentence-structure explanation in Chinese","replacementWarning":"what would be wrong if changed to base or another form, in Chinese"}.
+Rules:
+- This is contextual grammar analysis, not dictionary definition.
+- Focus on word form: plural, tense, participle, gerund, comparative, third-person singular, possessive, derivational form, etc.
+- If the word is already base form, explain why the base form is required in this position.
+- Keep it concise and suitable for CET intensive reading.`;
+      const c=await (o.chat.completions.create as any)({model:'deepseek-v4-flash',messages:[{role:"system",content:prompt},{role:"user",content:`Word: "${word}"\nSentence: "${sentence}"`}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
+      let raw=c.choices[0].message.content||'{}';
+      raw=raw.trim().replace(/^```json\s*\n?/i,'').replace(/\n?```\s*$/,'');
+      res.json(JSON.parse(raw));
+    }catch(e:any){res.status(500).json({error:"Grammar lookup failed",details:e?.message});}
+  });
+
   // Phrase scan — chunked approach for better coverage
   function escapePhraseRegex(value:string){
     return value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');

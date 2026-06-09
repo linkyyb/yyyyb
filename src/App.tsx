@@ -26,6 +26,7 @@ export default function App() {
   const [phraseHighlights, setPhraseHighlights] = useState<any[]>([]);
   const [phraseLists, setPhraseLists] = useState<PhraseList[]>([]);
   const [chatWordClick, setChatWordClick] = useState(localStorage.getItem('chat_word_click') !== 'false');
+  const [wordGrammarAnalysis, setWordGrammarAnalysis] = useState(localStorage.getItem('word_grammar_analysis') !== 'false');
   const [scanningPhrases, setScanningPhrases] = useState(false);
 
   // Word Popup
@@ -433,6 +434,8 @@ export default function App() {
             onWordClick={chatWordClick ? (word, x, y) => setWordPopup({ word, sentence: '', x, y }) : undefined}
             chatWordClickEnabled={chatWordClick}
             setChatWordClickEnabled={setChatWordClick}
+            wordGrammarAnalysisEnabled={wordGrammarAnalysis}
+            setWordGrammarAnalysisEnabled={setWordGrammarAnalysis}
           />
         </div>
       </main>
@@ -448,6 +451,7 @@ export default function App() {
           vocabLists={vocabLists}
           apiKey={apiKey}
           wordCache={wordCache}
+          enableGrammarAnalysis={wordGrammarAnalysis}
           onCacheUpdate={(w,d) => { setWordCache(prev => { const m = new Map(prev); m.set(w.toLowerCase(), d); return m; }); }}
           onClose={() => setWordPopup(null)}
           onAddToVocab={handleAddToVocab}

@@ -13,9 +13,11 @@ interface SettingsModalProps {
   setIsThinkingMode: (val: boolean) => void;
   chatWordClick?: boolean;
   setChatWordClick?: (val: boolean) => void;
+  wordGrammarAnalysis?: boolean;
+  setWordGrammarAnalysis?: (val: boolean) => void;
 }
 
-export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, model, setModel, isThinkingMode, setIsThinkingMode, chatWordClick, setChatWordClick }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, model, setModel, isThinkingMode, setIsThinkingMode, chatWordClick, setChatWordClick, wordGrammarAnalysis, setWordGrammarAnalysis }: SettingsModalProps) {
   const [localKey, setLocalKey] = useState(apiKey);
   
   useEffect(() => {
@@ -82,6 +84,18 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
                 onChange={(e) => { setChatWordClick(e.target.checked); localStorage.setItem('chat_word_click', String(e.target.checked)); }}
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
               <label htmlFor="chatWordCb" className="text-sm font-bold text-slate-700 cursor-pointer">聊天框双击查词</label>
+            </div>
+          )}
+
+          {setWordGrammarAnalysis && (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="wordGrammarCb" checked={wordGrammarAnalysis}
+                  onChange={(e) => { setWordGrammarAnalysis(e.target.checked); localStorage.setItem('word_grammar_analysis', String(e.target.checked)); }}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                <label htmlFor="wordGrammarCb" className="text-sm font-bold text-slate-700 cursor-pointer">单词弹窗显示词形语法解析</label>
+              </div>
+              <p className="text-[10px] text-slate-400 ml-6">根据当前句子分析为什么使用这个词形，不会保存进词汇本。</p>
             </div>
           )}
 
