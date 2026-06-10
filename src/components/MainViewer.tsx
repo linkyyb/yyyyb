@@ -11,7 +11,7 @@ interface MainViewerProps {
   onScanParagraph?: (text: string, callback: (phrases: any[]) => void) => void;
   passage: Passage;
   onSentenceClick: (sentence: string) => void;
-  onQuestionClick: (content: string, options: string, answer: string, explanation: string) => void;
+  onQuestionClick: (content: string, options: string, answer: string, explanation: string, userAnswer?: string) => void;
   onWordClick: (word: string, sentence: string, x: number, y: number) => void;
   onBookmark: (type: 'sentence' | 'word' | 'question', content: string, context?: string) => void;
 }
@@ -320,11 +320,11 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
           <button
             onClick={() => {
               const opts = (q.options || []).map((o: any) => `${o.key}) ${o.text}`).join('\n');
-              onQuestionClick(q.content, opts, q.correctAnswer || '', q.answerExplanation || '');
+              onQuestionClick(q.content, opts, q.correctAnswer || '', q.answerExplanation || '', userAnswers[q.id]);
             }}
             onTouchStart={onTouchStart} onTouchEnd={(e) => safeTouch(e, () => {
               const opts = (q.options || []).map((o: any) => `${o.key}) ${o.text}`).join('\n');
-              onQuestionClick(q.content, opts, q.correctAnswer || '', q.answerExplanation || '');
+              onQuestionClick(q.content, opts, q.correctAnswer || '', q.answerExplanation || '', userAnswers[q.id]);
             })}
             className="flex items-center gap-1.5 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors touch-manipulation"
           >

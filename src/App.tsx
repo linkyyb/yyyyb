@@ -222,7 +222,7 @@ export default function App() {
   }, []);
 
   // ── Explain: Question ──
-  const explainQuestion = useCallback((questionContent: string, options: string, answer: string, explanation: string) => {
+  const explainQuestion = useCallback((questionContent: string, options: string, answer: string, explanation: string, userAnswer?: string) => {
     const ctx = selectedPassage?.paragraphs.map((p) => p.sentences.join(' ')).join('\n') || '';
     const section = selectedPassage?.section || 'careful-reading';
 
@@ -234,17 +234,22 @@ export default function App() {
       return updated;
     });
 
+    // Build user answer emphasis
+    const wrongInfo = userAnswer && userAnswer !== answer ? `
+⚠️ 用户选了【${userAnswer}】但正确答案是【${answer}】。请重点分析为什么【${userAnswer}】是错的，用户的思维误区在哪。` : userAnswer && userAnswer === answer ? `
+✅ 用户选了正确答案【${answer}】。请确认并解释解题思路。` : '';
+
     // Build context-aware prompt based on section type
     let sectionPrompt = '';
     switch (section) {
       case 'banked-cloze':
-        sectionPrompt = '这是一道选词填空题。请结合全文语境分析空白处应选哪个词，并解释每个干扰项的排除理由。';
+        sectionPrompt = '这是一道选词填空题。请结合全文语境分析空白处应选哪个词，并解释每个干扰项的排除理由。' + wrongInfo;
         break;
       case 'long-reading-match':
-        sectionPrompt = '这是一道长篇阅读匹配题。请分析该陈述的关键信息，定位到对应段落，并说明匹配依据。';
+        sectionPrompt = '这是一道长篇阅读匹配题。请分析该陈述的关键信息，定位到对应段落，并说明匹配依据。' + wrongInfo;
         break;
       case 'careful-reading':
-        sectionPrompt = '这是一道仔细阅读选择题。请定位原文对应句，分析每个选项的对错原因，给出解题技巧。';
+        sectionPrompt = '这是一道仔细阅读选择题。请定位原文对应句，分析每个选项的对错原因，给出解题技巧。' + wrongInfo;
         break;
       case 'translation':
         sectionPrompt = '这是一道翻译题。请逐句分析翻译要点，提供关键表达和语法结构建议。';
