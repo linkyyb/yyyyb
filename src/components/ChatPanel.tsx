@@ -206,10 +206,10 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50" style={showNotes ? {display:'flex', flexDirection:'column', padding:'16px'} : {}}>
         {showNotes ? (
-          <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col" style={{height: 'calc(100vh - 120px)'}}>
+            <div className="flex items-center justify-between mb-3 shrink-0">
               <span className="text-sm font-bold text-slate-600">📝 草稿笔记</span>
               <button onClick={() => { setNotes(''); }} className="text-xs text-red-400 hover:text-red-600">清除草稿</button>
             </div>
@@ -218,7 +218,6 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
               onChange={(e) => setNotes(e.target.value)}
               placeholder="在此书写草稿、翻译、思路..."
               className="flex-1 w-full p-4 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm leading-relaxed bg-white"
-              style={{minHeight:'60vh'}}
             />
           </div>
         ) : messages.length === 0 && (
