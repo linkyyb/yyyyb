@@ -329,7 +329,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
 
   return (
     <>
-      <div className="h-16 px-6 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
+      <div className="h-16 px-6 border-b border-[var(--border)] bg-[var(--bg-card)] flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <div className="bg-blue-100 p-1.5 rounded-lg text-blue-600">
             <Sparkles className="w-5 h-5" />
@@ -365,7 +365,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         </div>
       ) : (
       <>
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[var(--bg)]">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 max-w-sm mx-auto p-4 space-y-4">
             <BookOpen className="w-12 h-12 text-slate-200" />
@@ -440,7 +440,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         <div ref={endOfMessagesRef} />
       </div>
 
-      <div className="p-4 bg-white border-t border-slate-200 shrink-0">
+      <div className="p-4 bg-[var(--bg-card)] border-t border-[var(--border)] shrink-0">
         <div className="max-w-4xl mx-auto mb-3 flex gap-2 overflow-x-auto scrollbar-hide px-1">
           <button
             onClick={() => handleSend("请根据我刚才的提问历史，评估我的英语语法水平，并为我出两道针对性的四六级练习题。")}

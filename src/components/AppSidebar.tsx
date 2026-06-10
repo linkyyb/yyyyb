@@ -56,7 +56,7 @@ export default function AppSidebar({
   };
 
   return (
-    <div className="w-[300px] bg-white border-r border-slate-200 flex flex-col h-full shadow-sm shrink-0">
+    <div className="w-[300px] bg-[var(--bg-sidebar)] border-r border-[var(--border)] flex flex-col h-full shadow-sm shrink-0">
       <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded-sm flex items-center justify-center shrink-0">

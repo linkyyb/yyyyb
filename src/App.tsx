@@ -297,7 +297,7 @@ export default function App() {
   };
 
   return (
-    <div className={"flex h-screen font-sans overflow-hidden " + (darkMode ? "bg-slate-900 text-slate-100" : "bg-slate-50 text-slate-900")}>
+    <div className="flex h-screen font-sans overflow-hidden bg-[var(--bg)] text-[var(--text)]">
       {sidebarVisible && (
         <AppSidebar
           exams={exams}
@@ -321,9 +321,9 @@ export default function App() {
       )}
       <main className="flex-1 flex overflow-hidden">
         {/* Left: Reading Area */}
-        <div className={`${sidebarVisible ? 'w-1/2' : 'flex-[3]'} h-full overflow-y-auto border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 transition-all`} style={{fontSize: fontSize+'px'}}>
+        <div className={`${sidebarVisible ? 'w-1/2' : 'flex-[3]'} h-full overflow-y-auto border-r border-[var(--border)] bg-[var(--bg-card)] transition-all`} style={{fontSize: fontSize+'px'}}>
           {/* Inline toolbar — blends with reading header */}
-          <div className="sticky top-0 z-40 flex items-center gap-3 px-4 py-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur border-b border-slate-100 dark:border-slate-700">
+          <div className="sticky top-0 z-40 flex items-center gap-3 px-4 py-2 bg-[var(--bg-card)]/90 backdrop-blur border-b border-[var(--border)]">
             <button
               onClick={() => setSidebarVisible(!sidebarVisible)}
               className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
@@ -338,7 +338,7 @@ export default function App() {
               className="w-20 h-1 accent-blue-500"
             />
             <span className="text-[10px] text-slate-400 w-8">{fontSize}px</span>
-            <span className="text-slate-300 dark:text-slate-600">|</span>
+            <span className="text-slate-300">|</span>
             <button onClick={() => setDarkMode(!darkMode)} className="text-[10px] px-1 py-0.5 rounded transition-colors" title={darkMode?"日间模式":"护眼模式"}>{darkMode?"☀️":"🌙"}</button>
             <span className="text-slate-300">|</span>
             <button
@@ -373,7 +373,7 @@ export default function App() {
               }} className="px-1.5 py-1 rounded text-[10px] text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                 title="重新扫描短语">🔄</button>
             )}
-            <span className="text-slate-300 dark:text-slate-600">|</span>
+            <span className="text-slate-300">|</span>
             <div className="relative"><ExamTimer /></div>
           </div>
           {activeTab === 'exams' && selectedPassage ? (
