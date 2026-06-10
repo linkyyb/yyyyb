@@ -2,42 +2,78 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Send, Settings, Sparkles, Loader2, BookOpen, ChevronDown, ChevronRight, Pencil, Eraser } from 'lucide-react';
 
-// ── Drawing Canvas + Text notes ──
+// ── Stylus-only Drawing Canvas ──
 function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const isDrawing = useRef(false);
   const [mode, setMode] = useState<'draw'|'write'>('write');
   const [text, setText] = useState('');
 
+  // Resize canvas to fill container
   useEffect(() => {
-    const c = canvasRef.current; if (!c) return;
-    const ctx = c.getContext('2d'); if (!ctx) return;
-    ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 2; ctx.lineCap = 'round';
-    // Restore saved image
-    if (saved && saved.startsWith('data:image')) {
-      const img = new Image();
-      img.onload = () => ctx.drawImage(img, 0, 0);
-      img.src = saved;
-    }
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (!container || !canvas) return;
+    const resize = () => {
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      const ctx = canvas.getContext('2d')!;
+      ctx.scale(dpr, dpr);
+      ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      // Restore saved drawing
+      if (saved && saved.startsWith('data:image')) {
+        const img = new Image();
+        img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0,rect.width,rect.height); };
+        img.src = saved;
+      }
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
   }, [saved]);
 
-  const getPos = (e: React.MouseEvent | React.TouchEvent) => {
-    const c = canvasRef.current!; const r = c.getBoundingClientRect();
-    const cx = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
-    const cy = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
-    return { x: cx - r.left, y: cy - r.top };
+  // Pointer event handlers — stylus only
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'pen') return; // stylus only
+    isDrawing.current = true;
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    const rect = canvas.getBoundingClientRect();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    canvas.setPointerCapture(e.pointerId);
   };
-  const startDraw = (e: any) => { isDrawing.current = true; const ctx = canvasRef.current!.getContext('2d')!; const {x,y}=getPos(e); ctx.beginPath(); ctx.moveTo(x,y); };
-  const draw = (e: any) => { if(!isDrawing.current) return; const ctx = canvasRef.current!.getContext('2d')!; const {x,y}=getPos(e); ctx.lineTo(x,y); ctx.stroke(); };
-  const stopDraw = () => { if(!isDrawing.current) return; isDrawing.current = false; onSave(canvasRef.current!.toDataURL()); };
-  const clearCanvas = () => { const c=canvasRef.current!; c.getContext('2d')!.clearRect(0,0,c.width,c.height); onSave(''); };
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDrawing.current || e.pointerType !== 'pen') return;
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+  };
+  const handlePointerUp = () => {
+    if (!isDrawing.current) return;
+    isDrawing.current = false;
+    onSave(canvasRef.current!.toDataURL());
+  };
+  const clearCanvas = () => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    onSave('');
+  };
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex items-center justify-between mb-2 shrink-0">
         <div className="flex gap-1">
           <button onClick={()=>setMode('write')} className={`text-xs px-2 py-1 rounded ${mode==='write'?'bg-blue-100 text-blue-700':'text-slate-500'}`}>✏️ 打字</button>
-          <button onClick={()=>setMode('draw')} className={`text-xs px-2 py-1 rounded ${mode==='draw'?'bg-blue-100 text-blue-700':'text-slate-500'}`}>🖊️ 手写</button>
+          <button onClick={()=>setMode('draw')} className={`text-xs px-2 py-1 rounded ${mode==='draw'?'bg-blue-100 text-blue-700':'text-slate-500'} flex items-center gap-1`}>🖊️ <span className="text-[9px] text-slate-400">触控笔</span></button>
         </div>
         {mode==='draw' && <button onClick={clearCanvas} className="text-xs px-2 py-1 bg-red-50 text-red-500 rounded hover:bg-red-100"><Eraser className="w-3 h-3"/></button>}
       </div>
@@ -46,10 +82,12 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
           value={saved&&!saved.startsWith('data:')?saved:text} onChange={e=>{setText(e.target.value);onSave(e.target.value);}}
           placeholder="在此书写草稿、翻译、思路..." />
       ) : (
-        <canvas ref={canvasRef} width={600} height={700}
-          onMouseDown={startDraw} onMouseMove={draw} onMouseUp={stopDraw} onMouseLeave={stopDraw}
-          onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={stopDraw}
-          className="flex-1 w-full border border-slate-200 rounded-xl bg-white touch-none" />
+        <div ref={containerRef} className="flex-1 border border-slate-200 rounded-xl bg-white overflow-hidden touch-none">
+          <canvas ref={canvasRef}
+            onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}
+            className="w-full h-full"
+          />
+        </div>
       )}
     </div>
   );
@@ -259,12 +297,14 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50" style={showNotes ? {display:'flex', flexDirection:'column', padding:'16px'} : {}}>
-        {showNotes ? (
-          <div className="flex flex-col" style={{height: 'calc(100vh - 120px)'}}>
-            <DrawPad saved={notes} onSave={(dataUrl) => setNotes(dataUrl)} />
-          </div>
-        ) : messages.length === 0 && (
+      {showNotes ? (
+        <div className="flex-1 flex flex-col p-4 bg-slate-50/50" style={{height: 'calc(100vh - 64px)'}}>
+          <DrawPad saved={notes} onSave={(dataUrl) => setNotes(dataUrl)} />
+        </div>
+      ) : (
+      <>
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
+        {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 max-w-sm mx-auto p-4 space-y-4">
             <BookOpen className="w-12 h-12 text-slate-200" />
             <p className="text-sm">点击左侧阅读界面的句子或单词旁的弹窗可获取精讲分析。也可直接在下方向 AI 提问。</p>
@@ -338,7 +378,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         <div ref={endOfMessagesRef} />
       </div>
 
-      {!showNotes && <div className="p-4 bg-white border-t border-slate-200 shrink-0">
+      <div className="p-4 bg-white border-t border-slate-200 shrink-0">
         <div className="max-w-4xl mx-auto mb-3 flex gap-2 overflow-x-auto scrollbar-hide px-1">
           <button
             onClick={() => handleSend("请根据我刚才的提问历史，评估我的英语语法水平，并为我出两道针对性的四六级练习题。")}
@@ -385,7 +425,9 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
             <Send className="w-5 h-5 ml-1" />
           </button>
         </form>
-      </div>}
+      </div>
+      </>
+      )}
 
       <SettingsModal
         isOpen={isSettingsOpen}
