@@ -62,11 +62,13 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
   const startDraw = (e: React.PointerEvent) => {
     if (e.pointerType !== 'pen' && e.pointerType !== 'mouse') return;
     const ctx = ctxRef.current; if (!ctx) return;
-    const pressure = (e as any).pressure || 0.5;
-    ctx.lineWidth = drawSize * (0.3 + pressure * 0.7);
     const { x, y } = getPos(e);
+    const w = drawSize * 0.6;
+    ctx.fillStyle = drawColor;
+    ctx.beginPath();
+    ctx.arc(x, y, w / 2, 0, Math.PI * 2);
+    ctx.fill();
     lastPoint.current = { x, y };
-    lastMid.current = { x, y };
     isDrawing.current = true;
   };
 
@@ -83,16 +85,23 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
 
       if (lastPoint.current) {
         const lp = lastPoint.current;
-        const mid = { x: (lp.x + x) / 2, y: (lp.y + y) / 2 };
-        const lm = lastMid.current || lp;
-        const pressure = evt.pressure || 0.5;
-        ctx.lineWidth = drawSize * (0.3 + pressure * 0.7);
+        const r = drawSize / 2;
+        const pressure = (evt.pressure || 0.5);
+        const w = drawSize * (0.3 + pressure * 0.7);
+
+        // Draw connecting line
+        ctx.lineWidth = w;
         ctx.strokeStyle = drawColor;
         ctx.beginPath();
-        ctx.moveTo(lm.x, lm.y);
-        ctx.quadraticCurveTo(lp.x, lp.y, mid.x, mid.y);
+        ctx.moveTo(lp.x, lp.y);
+        ctx.lineTo(x, y);
         ctx.stroke();
-        lastMid.current = mid;
+
+        // Draw circle at current point to fill gap (prevent thin connections at speed)
+        ctx.fillStyle = drawColor;
+        ctx.beginPath();
+        ctx.arc(x, y, w / 2, 0, Math.PI * 2);
+        ctx.fill();
       }
       lastPoint.current = { x, y };
     }
@@ -101,11 +110,7 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
   const stopDraw = () => {
     if (!isDrawing.current) return;
     isDrawing.current = false;
-    const ctx = ctxRef.current;
-    const lp = lastPoint.current!;
-    const lm = lastMid.current!;
-    if (ctx && lp) { ctx.beginPath(); ctx.moveTo(lm.x, lm.y); ctx.lineTo(lp.x, lp.y); ctx.stroke(); }
-    lastPoint.current = null; lastMid.current = null;
+    lastPoint.current = null;
     clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => onSave(canvasRef.current?.toDataURL() || ''), 300);
   };
