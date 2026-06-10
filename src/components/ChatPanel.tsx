@@ -59,6 +59,10 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
   const [isThinkingMode, setIsThinkingMode] = useState<boolean>(localStorage.getItem('deepseek_thinking') !== 'false');
   const [isSettingsOpen, setIsSettingsOpen] = useState(!apiKey);
   const [expandedMsgIds, setExpandedMsgIds] = useState<Set<string>>(new Set());
+  const [showNotes, setShowNotes] = useState(false);
+  const [notes, setNotes] = useState(() => {
+    try { return localStorage.getItem('cet_notes_'+chatSessionId) || ''; } catch { return ''; }
+  });
 
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef(chatSessionId);
@@ -163,6 +167,13 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
     localStorage.removeItem(`chat_session_${chatSessionId}`);
   };
 
+  // Load/save notes per session
+  useEffect(() => {
+    try { const saved = localStorage.getItem('cet_notes_'+chatSessionId); setNotes(saved || ''); }
+    catch { setNotes(''); }
+  }, [chatSessionId]);
+  useEffect(() => { localStorage.setItem('cet_notes_'+chatSessionId, notes); }, [notes, chatSessionId]);
+
   return (
     <>
       <div className="h-16 px-6 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
@@ -177,12 +188,15 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         </div>
         <div className="flex items-center gap-1">
           <button
+            onClick={() => setShowNotes(!showNotes)}
+            className={`text-[10px] uppercase font-bold transition-colors px-2 py-1 rounded ${showNotes ? 'bg-amber-100 text-amber-700' : 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'}`}
+            title="草稿笔记"
+          >📝 笔记</button>
+          {!showNotes && <button
             onClick={handleClearHistory}
             className="text-[10px] uppercase font-bold text-slate-400 hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-red-50"
             title="清空记录"
-          >
-            清空
-          </button>
+          >清空</button>}
           <button
             onClick={() => setIsSettingsOpen(true)}
             className="p-2 text-slate-400 hover:text-blue-600 transition-colors rounded-full hover:bg-blue-50"
@@ -193,7 +207,21 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
-        {messages.length === 0 && (
+        {showNotes ? (
+          <div className="h-full flex flex-col">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-bold text-slate-600">📝 草稿笔记</span>
+              <button onClick={() => { setNotes(''); }} className="text-xs text-red-400 hover:text-red-600">清除草稿</button>
+            </div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="在此书写草稿、翻译、思路..."
+              className="flex-1 w-full p-4 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm leading-relaxed bg-white"
+              style={{minHeight:'60vh'}}
+            />
+          </div>
+        ) : messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 max-w-sm mx-auto p-4 space-y-4">
             <BookOpen className="w-12 h-12 text-slate-200" />
             <p className="text-sm">点击左侧阅读界面的句子或单词旁的弹窗可获取精讲分析。也可直接在下方向 AI 提问。</p>
@@ -267,7 +295,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         <div ref={endOfMessagesRef} />
       </div>
 
-      <div className="p-4 bg-white border-t border-slate-200 shrink-0">
+      {!showNotes && <div className="p-4 bg-white border-t border-slate-200 shrink-0">
         <div className="max-w-4xl mx-auto mb-3 flex gap-2 overflow-x-auto scrollbar-hide px-1">
           <button
             onClick={() => handleSend("请根据我刚才的提问历史，评估我的英语语法水平，并为我出两道针对性的四六级练习题。")}
@@ -314,7 +342,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
             <Send className="w-5 h-5 ml-1" />
           </button>
         </form>
-      </div>
+      </div>}
 
       <SettingsModal
         isOpen={isSettingsOpen}
