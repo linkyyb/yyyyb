@@ -156,15 +156,25 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
 export default function MainViewer({ passage, onSentenceClick, onQuestionClick, onWordClick, phraseMode, phraseHighlights, onScanParagraph, onBookmark }: MainViewerProps) {
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [revealedQuestions, setRevealedQuestions] = useState<Record<string, boolean>>({});
-  // Touch guard: prevent accidental clicks during scrolling
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-  const onTouchStart = (e: React.TouchEvent) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+  // Touch guard: per-element start tracking via data attribute
+  const onTouchStart = (e: React.TouchEvent) => {
+    const el = e.currentTarget as HTMLElement;
+    el.dataset.tsx = String(e.touches[0].clientX);
+    el.dataset.tsy = String(e.touches[0].clientY);
+    el.dataset.tst = String(Date.now());
+  };
   const safeTouch = (e: React.TouchEvent, fn: () => void) => {
-    if (!touchStart.current) { fn(); return; }
-    const dx = Math.abs(e.changedTouches[0].clientX - touchStart.current.x);
-    const dy = Math.abs(e.changedTouches[0].clientY - touchStart.current.y);
-    if (dx < 8 && dy < 8) { e.preventDefault(); fn(); }
-    touchStart.current = null;
+    const el = e.currentTarget as HTMLElement;
+    const sx = parseFloat(el.dataset.tsx || '0');
+    const sy = parseFloat(el.dataset.tsy || '0');
+    const st = parseFloat(el.dataset.tst || '0');
+    if (!sx || !st) { fn(); return; }
+    const dx = Math.abs(e.changedTouches[0].clientX - sx);
+    const dy = Math.abs(e.changedTouches[0].clientY - sy);
+    const dt = Date.now() - st;
+    // Must not move much AND must be quick (not a long press/scroll)
+    if (dx < 12 && dy < 12 && dt < 500) { e.preventDefault(); fn(); }
+    delete el.dataset.tsx; delete el.dataset.tsy; delete el.dataset.tst;
   };
 
   const selectAnswer = (qId: string, key: string) => {
