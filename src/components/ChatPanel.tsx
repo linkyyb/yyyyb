@@ -138,7 +138,7 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
           value={text} onChange={e=>{setText(e.target.value);onSave(e.target.value);}}
           placeholder="在此书写草稿、翻译、思路..." />
       ) : (
-        <div ref={containerRef} className="flex-1 border border-slate-200 rounded-xl bg-white overflow-hidden touch-none relative">
+        <div ref={containerRef} className="flex-1 border border-slate-200 rounded-xl bg-white overflow-hidden touch-none relative select-none" style={{WebkitUserSelect:'none',WebkitTouchCallout:'none'}}>
           <canvas ref={canvasRef}
             onPointerDown={startDraw} onPointerMove={draw} onPointerUp={stopDraw} onPointerLeave={stopDraw}
             className="block"
