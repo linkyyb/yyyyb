@@ -169,7 +169,10 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
 
   const selectAnswer = (qId: string, key: string) => {
     if (revealedQuestions[qId]) return;
-    setUserAnswers((prev) => ({ ...prev, [qId]: key }));
+    setUserAnswers((prev) => {
+      if (prev[qId] === key) { const { [qId]: _, ...rest } = prev; return rest; } // Toggle off
+      return { ...prev, [qId]: key };
+    });
   };
 
   const revealAnswer = (qId: string) => {
@@ -244,16 +247,11 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
       cls = 'border-blue-400 bg-blue-50 text-blue-700 font-bold ring-2 ring-blue-400';
     }
 
-    const handleTouch = (e: React.TouchEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      selectAnswer(q.id, opt.key);
-    };
-
     return (
       <button
         onClick={(e) => { e.stopPropagation(); selectAnswer(q.id, opt.key); }}
-        onTouchEnd={handleTouch}
+        onTouchStart={onTouchStart}
+        onTouchEnd={(e) => safeTouch(e, () => selectAnswer(q.id, opt.key))}
         disabled={isRevealed}
         className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-left text-sm transition-all min-h-[44px] touch-manipulation ${cls} ${!isRevealed ? 'cursor-pointer hover:shadow-md active:scale-[0.98]' : 'cursor-default'}`}
       >

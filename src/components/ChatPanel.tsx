@@ -1,6 +1,59 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Send, Settings, Sparkles, Loader2, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
+import { Send, Settings, Sparkles, Loader2, BookOpen, ChevronDown, ChevronRight, Pencil, Eraser } from 'lucide-react';
+
+// ── Drawing Canvas + Text notes ──
+function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawing = useRef(false);
+  const [mode, setMode] = useState<'draw'|'write'>('write');
+  const [text, setText] = useState('');
+
+  useEffect(() => {
+    const c = canvasRef.current; if (!c) return;
+    const ctx = c.getContext('2d'); if (!ctx) return;
+    ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    // Restore saved image
+    if (saved && saved.startsWith('data:image')) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.src = saved;
+    }
+  }, [saved]);
+
+  const getPos = (e: React.MouseEvent | React.TouchEvent) => {
+    const c = canvasRef.current!; const r = c.getBoundingClientRect();
+    const cx = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const cy = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    return { x: cx - r.left, y: cy - r.top };
+  };
+  const startDraw = (e: any) => { isDrawing.current = true; const ctx = canvasRef.current!.getContext('2d')!; const {x,y}=getPos(e); ctx.beginPath(); ctx.moveTo(x,y); };
+  const draw = (e: any) => { if(!isDrawing.current) return; const ctx = canvasRef.current!.getContext('2d')!; const {x,y}=getPos(e); ctx.lineTo(x,y); ctx.stroke(); };
+  const stopDraw = () => { if(!isDrawing.current) return; isDrawing.current = false; onSave(canvasRef.current!.toDataURL()); };
+  const clearCanvas = () => { const c=canvasRef.current!; c.getContext('2d')!.clearRect(0,0,c.width,c.height); onSave(''); };
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex items-center justify-between mb-2 shrink-0">
+        <div className="flex gap-1">
+          <button onClick={()=>setMode('write')} className={`text-xs px-2 py-1 rounded ${mode==='write'?'bg-blue-100 text-blue-700':'text-slate-500'}`}>✏️ 打字</button>
+          <button onClick={()=>setMode('draw')} className={`text-xs px-2 py-1 rounded ${mode==='draw'?'bg-blue-100 text-blue-700':'text-slate-500'}`}>🖊️ 手写</button>
+        </div>
+        {mode==='draw' && <button onClick={clearCanvas} className="text-xs px-2 py-1 bg-red-50 text-red-500 rounded hover:bg-red-100"><Eraser className="w-3 h-3"/></button>}
+      </div>
+      {mode==='write' ? (
+        <textarea className="flex-1 w-full p-4 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm leading-relaxed bg-white"
+          value={saved&&!saved.startsWith('data:')?saved:text} onChange={e=>{setText(e.target.value);onSave(e.target.value);}}
+          placeholder="在此书写草稿、翻译、思路..." />
+      ) : (
+        <canvas ref={canvasRef} width={600} height={700}
+          onMouseDown={startDraw} onMouseMove={draw} onMouseUp={stopDraw} onMouseLeave={stopDraw}
+          onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={stopDraw}
+          className="flex-1 w-full border border-slate-200 rounded-xl bg-white touch-none" />
+      )}
+    </div>
+  );
+}
 import { ChatMessage, DeepSeekModel } from '../types';
 import Markdown from 'react-markdown';
 import SettingsModal from './SettingsModal';
@@ -209,16 +262,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
       <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50" style={showNotes ? {display:'flex', flexDirection:'column', padding:'16px'} : {}}>
         {showNotes ? (
           <div className="flex flex-col" style={{height: 'calc(100vh - 120px)'}}>
-            <div className="flex items-center justify-between mb-3 shrink-0">
-              <span className="text-sm font-bold text-slate-600">📝 草稿笔记</span>
-              <button onClick={() => { setNotes(''); }} className="text-xs text-red-400 hover:text-red-600">清除草稿</button>
-            </div>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="在此书写草稿、翻译、思路..."
-              className="flex-1 w-full p-4 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm leading-relaxed bg-white"
-            />
+            <DrawPad saved={notes} onSave={(dataUrl) => setNotes(dataUrl)} />
           </div>
         ) : messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 max-w-sm mx-auto p-4 space-y-4">
