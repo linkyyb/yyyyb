@@ -2,77 +2,117 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Send, Settings, Sparkles, Loader2, BookOpen, ChevronDown, ChevronRight, Pencil, Eraser } from 'lucide-react';
 
-// ── Smooth Drawing Canvas (powered by Atrament.js) ──
+// ── High-DPI Drawing Canvas ──
 function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const atramentRef = useRef<any>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const isDrawing = useRef(false);
   const [mode, setMode] = useState<'draw'|'write'>('write');
   const [drawColor, setDrawColor] = useState('#1e40af');
   const [drawSize, setDrawSize] = useState(2.5);
-  const [text, setText] = useState('');
+  const [text, setText] = useState(() => saved && !saved.startsWith('data:') ? saved : '');
 
-  // Init Atrament with smooth strokes + pressure
+  // Setup crisp canvas at native device resolution
   useEffect(() => {
-    if (mode !== 'draw' || !containerRef.current) return;
+    if (mode !== 'draw') return;
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
 
-    import('atrament').then((m: any) => {
-      const Atrament = m.default;
-      const a = new Atrament(canvas, {
-        width: containerRef.current!.clientWidth,
-        height: containerRef.current!.clientHeight - 40,
-        color: drawColor,
-        weight: drawSize,
-        smoothing: 0.7,
-        adaptiveStroke: true,
-      });
-      atramentRef.current = a;
-      // Stylus only
-      a.mode = a.MODE_DRAW;
-      // Restore saved
-      if (saved && saved.startsWith('data:image')) {
-        const img = new Image();
-        img.onload = () => { const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0); };
-        img.src = saved;
-      }
-    });
+    const dpr = window.devicePixelRatio || 1;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
 
-    return () => {
-      if (atramentRef.current) {
-        try { atramentRef.current.destroy?.(); } catch {}
-        atramentRef.current = null;
-      }
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(dpr, dpr);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = drawColor;
+    ctx.lineWidth = drawSize;
+    ctx.imageSmoothingEnabled = false;
+    ctxRef.current = ctx;
+
+    // Restore saved drawing
+    if (saved && saved.startsWith('data:image')) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, w, h);
+      img.src = saved;
+    }
+
+    const resize = () => {
+      const dpr2 = window.devicePixelRatio || 1;
+      const w2 = container.clientWidth;
+      const h2 = container.clientHeight;
+      // Save current drawing before resize
+      const dataUrl = canvas.toDataURL();
+      canvas.width = w2 * dpr2;
+      canvas.height = h2 * dpr2;
+      canvas.style.width = w2 + 'px';
+      canvas.style.height = h2 + 'px';
+      const ctx2 = canvas.getContext('2d')!;
+      ctx2.scale(dpr2, dpr2);
+      ctx2.lineCap = 'round'; ctx2.lineJoin = 'round';
+      ctx2.strokeStyle = drawColor; ctx2.lineWidth = drawSize;
+      ctx2.imageSmoothingEnabled = false;
+      ctxRef.current = ctx2;
+      // Restore
+      const img = new Image();
+      img.onload = () => ctx2.drawImage(img, 0, 0, w2, h2);
+      img.src = dataUrl;
     };
-  }, [mode]);
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, [mode, saved]);
 
-  // Sync color/size changes
   useEffect(() => {
-    const a = atramentRef.current;
-    if (!a) return;
-    a.color = drawColor;
-    a.weight = drawSize;
+    if (ctxRef.current) { ctxRef.current.strokeStyle = drawColor; ctxRef.current.lineWidth = drawSize; }
   }, [drawColor, drawSize]);
 
-  const handleSave = () => {
-    if (!atramentRef.current) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    onSave(canvas.toDataURL());
+  const getPos = (e: React.PointerEvent) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const startDraw = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'pen' && e.pointerType !== 'mouse') return;
+    const ctx = ctxRef.current; if (!ctx) return;
+    // Adjust line width by pressure (if available)
+    const pressure = (e as any).pressure || 0.5;
+    ctx.lineWidth = drawSize * (0.3 + pressure * 0.7);
+    const { x, y } = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    isDrawing.current = true;
+  };
+
+  const draw = (e: React.PointerEvent) => {
+    if (!isDrawing.current) return;
+    const ctx = ctxRef.current; if (!ctx) return;
+    const { x, y } = getPos(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    // Start a new small path from this point for smooth continuation
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const stopDraw = () => {
+    if (!isDrawing.current) return;
+    isDrawing.current = false;
+    onSave(canvasRef.current!.toDataURL());
   };
 
   const clearCanvas = () => {
-    const a = atramentRef.current;
-    if (a) a.clear();
-    else { const c = canvasRef.current; if (c) c.getContext('2d')?.clearRect(0, 0, c.width, c.height); }
+    const canvas = canvasRef.current;
+    const ctx = ctxRef.current;
+    if (!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
     onSave('');
-  };
-
-  const undo = () => {
-    // Atrament doesn't have built-in undo, but we can clear the last stroke
-    // For now, clear all as a simple undo
-    clearCanvas();
   };
 
   return (
@@ -92,12 +132,15 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
       </div>
       {mode==='write' ? (
         <textarea className="flex-1 w-full p-4 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm leading-relaxed bg-white"
-          value={saved&&!saved.startsWith('data:')?saved:text} onChange={e=>{setText(e.target.value);onSave(e.target.value);}}
+          value={text} onChange={e=>{setText(e.target.value);onSave(e.target.value);}}
           placeholder="在此书写草稿、翻译、思路..." />
       ) : (
         <div ref={containerRef} className="flex-1 border border-slate-200 rounded-xl bg-white overflow-hidden touch-none relative">
-          <canvas ref={canvasRef} className="w-full h-full" />
-          <button onClick={handleSave} className="absolute bottom-2 right-2 text-[10px] px-2 py-1 bg-slate-800/70 text-white rounded hover:bg-slate-800">保存</button>
+          <canvas ref={canvasRef}
+            onPointerDown={startDraw} onPointerMove={draw} onPointerUp={stopDraw} onPointerLeave={stopDraw}
+            className="block"
+          />
+          <button onClick={() => onSave(canvasRef.current?.toDataURL() || '')} className="absolute bottom-2 right-2 text-[10px] px-2 py-1 bg-slate-800/70 text-white rounded hover:bg-slate-800">保存</button>
         </div>
       )}
     </div>
