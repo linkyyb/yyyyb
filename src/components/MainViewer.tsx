@@ -135,7 +135,7 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
         <button
           onClick={(e) => { e.stopPropagation(); onSentenceClick(text); }}
           onTouchStart={(e) => { const el=e.currentTarget as HTMLElement; el.dataset.tsx=String(e.touches[0].clientX); el.dataset.tsy=String(e.touches[0].clientY); el.dataset.tst=String(Date.now()); }}
-          onTouchEnd={(e) => { const el=e.currentTarget as HTMLElement; const sx=parseFloat(el.dataset.tsx||'0'),sy=parseFloat(el.dataset.tsy||'0'),st=parseFloat(el.dataset.tst||'0'); delete el.dataset.tsx; delete el.dataset.tsy; delete el.dataset.tst; if(sx&&st){const dx=Math.abs(e.changedTouches[0].clientX-sx),dy=Math.abs(e.changedTouches[0].clientY-sy);if(dx<12&&dy<12&&Date.now()-st<500){e.preventDefault();e.stopPropagation();onSentenceClick(text);}} }}
+          onTouchEnd={(e) => { const el=e.currentTarget as HTMLElement; const sx=parseFloat(el.dataset.tsx||'0'),sy=parseFloat(el.dataset.tsy||'0'),st=parseFloat(el.dataset.tst||'0'); delete el.dataset.tsx; delete el.dataset.tsy; delete el.dataset.tst; if(sx&&st){const dx=Math.abs(e.changedTouches[0].clientX-sx),dy=Math.abs(e.changedTouches[0].clientY-sy);if(dx<5&&dy<5&&Date.now()-st<200){e.preventDefault();e.stopPropagation();onSentenceClick(text);}} }}
           className="p-1.5 rounded-lg hover:bg-blue-100 active:bg-blue-200 text-blue-400 hover:text-blue-600 transition-colors min-w-[32px] min-h-[32px] touch-manipulation"
           title="AI 解析此句"
         >
@@ -144,7 +144,7 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
         <button
           onClick={(e) => { e.stopPropagation(); onBookmark('sentence', text, passageTitle); }}
           onTouchStart={(e) => { const el=e.currentTarget as HTMLElement; el.dataset.tsx=String(e.touches[0].clientX); el.dataset.tsy=String(e.touches[0].clientY); el.dataset.tst=String(Date.now()); }}
-          onTouchEnd={(e) => { const el=e.currentTarget as HTMLElement; const sx=parseFloat(el.dataset.tsx||'0'),sy=parseFloat(el.dataset.tsy||'0'),st=parseFloat(el.dataset.tst||'0'); delete el.dataset.tsx; delete el.dataset.tsy; delete el.dataset.tst; if(sx&&st){const dx=Math.abs(e.changedTouches[0].clientX-sx),dy=Math.abs(e.changedTouches[0].clientY-sy);if(dx<12&&dy<12&&Date.now()-st<500){e.preventDefault();e.stopPropagation();onBookmark('sentence',text,passageTitle);}} }}
+          onTouchEnd={(e) => { const el=e.currentTarget as HTMLElement; const sx=parseFloat(el.dataset.tsx||'0'),sy=parseFloat(el.dataset.tsy||'0'),st=parseFloat(el.dataset.tst||'0'); delete el.dataset.tsx; delete el.dataset.tsy; delete el.dataset.tst; if(sx&&st){const dx=Math.abs(e.changedTouches[0].clientX-sx),dy=Math.abs(e.changedTouches[0].clientY-sy);if(dx<5&&dy<5&&Date.now()-st<200){e.preventDefault();e.stopPropagation();onBookmark('sentence',text,passageTitle);}} }}
           className="p-1.5 rounded-lg hover:bg-purple-100 active:bg-purple-200 text-slate-300 hover:text-purple-500 transition-colors min-w-[32px] min-h-[32px] touch-manipulation"
           title="收藏此句"
         >
