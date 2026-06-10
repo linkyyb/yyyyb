@@ -156,6 +156,16 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
 export default function MainViewer({ passage, onSentenceClick, onQuestionClick, onWordClick, phraseMode, phraseHighlights, onScanParagraph, onBookmark }: MainViewerProps) {
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [revealedQuestions, setRevealedQuestions] = useState<Record<string, boolean>>({});
+  // Touch guard: prevent accidental clicks during scrolling
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+  const safeTouch = (e: React.TouchEvent, fn: () => void) => {
+    if (!touchStart.current) { fn(); return; }
+    const dx = Math.abs(e.changedTouches[0].clientX - touchStart.current.x);
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStart.current.y);
+    if (dx < 8 && dy < 8) { e.preventDefault(); fn(); }
+    touchStart.current = null;
+  };
 
   const selectAnswer = (qId: string, key: string) => {
     if (revealedQuestions[qId]) return;
