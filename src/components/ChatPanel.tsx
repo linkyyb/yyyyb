@@ -73,19 +73,29 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
   const draw = (e: React.PointerEvent) => {
     if (!isDrawing.current) return;
     const ctx = ctxRef.current; if (!ctx) return;
-    const { x, y } = getPos(e);
-    const lp = lastPoint.current!;
-    const mid = { x: (lp.x + x) / 2, y: (lp.y + y) / 2 };
-    const lm = lastMid.current!;
-    const pressure = (e as any).pressure || 0.5;
-    ctx.lineWidth = drawSize * (0.3 + pressure * 0.7);
-    ctx.strokeStyle = drawColor;
-    ctx.beginPath();
-    ctx.moveTo(lm.x, lm.y);
-    ctx.quadraticCurveTo(lp.x, lp.y, mid.x, mid.y);
-    ctx.stroke();
-    lastPoint.current = { x, y };
-    lastMid.current = mid;
+
+    // Use coalesced events for 240Hz Apple Pencil sampling
+    const coalesced = (e.nativeEvent as any).getCoalescedEvents?.() || [e.nativeEvent];
+    for (const evt of coalesced) {
+      const rect = canvasRef.current!.getBoundingClientRect();
+      const x = evt.clientX - rect.left;
+      const y = evt.clientY - rect.top;
+
+      if (lastPoint.current) {
+        const lp = lastPoint.current;
+        const mid = { x: (lp.x + x) / 2, y: (lp.y + y) / 2 };
+        const lm = lastMid.current || lp;
+        const pressure = evt.pressure || 0.5;
+        ctx.lineWidth = drawSize * (0.3 + pressure * 0.7);
+        ctx.strokeStyle = drawColor;
+        ctx.beginPath();
+        ctx.moveTo(lm.x, lm.y);
+        ctx.quadraticCurveTo(lp.x, lp.y, mid.x, mid.y);
+        ctx.stroke();
+        lastMid.current = mid;
+      }
+      lastPoint.current = { x, y };
+    }
   };
 
   const stopDraw = () => {
