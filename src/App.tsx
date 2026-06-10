@@ -100,6 +100,8 @@ export default function App() {
   useEffect(() => { localStorage.setItem('cet6_pain_points', JSON.stringify(painRecord)); }, [painRecord]);
   useEffect(() => { localStorage.setItem('cet6_completed', JSON.stringify([...completedQuestions])); }, [completedQuestions]);
   useEffect(() => { localStorage.setItem('cet6_phrases', JSON.stringify(phraseLists)); }, [phraseLists]);
+  // Dark mode: toggle 'dark' class on <html>
+  useEffect(() => { localStorage.setItem('cet_dark_mode', String(darkMode)); document.documentElement.classList.toggle('dark', darkMode); }, [darkMode]);
 
   // ── Derived state ──
   const selectedExam = exams.find((e) => e.id === selectedExamId) || (exams.length > 0 ? exams[0] : undefined);
@@ -297,7 +299,7 @@ export default function App() {
   };
 
   return (
-    <div className={`flex h-screen font-sans overflow-hidden ${darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+    <div className="flex h-screen font-sans overflow-hidden bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
       {sidebarVisible && (
         <AppSidebar
           exams={exams}
@@ -322,9 +324,9 @@ export default function App() {
       )}
       <main className="flex-1 flex overflow-hidden">
         {/* Left: Reading Area */}
-        <div className={`${sidebarVisible ? 'w-1/2' : 'flex-[3]'} h-full overflow-y-auto ${darkMode ? 'border-r-slate-700 bg-slate-800' : 'border-r-slate-200 bg-white'} border-r transition-all`} style={{fontSize: fontSize+'px'}}>
+        <div className={`${sidebarVisible ? 'w-1/2' : 'flex-[3]'} h-full overflow-y-auto border-r border-r-slate-200 dark:border-r-slate-700 bg-white dark:bg-slate-800 transition-all`} style={{fontSize: fontSize+'px'}}>
           {/* Inline toolbar — blends with reading header */}
-          <div className={`sticky top-0 z-40 flex items-center gap-3 px-4 py-2 backdrop-blur border-b ${darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-slate-100'}`}>
+          <div className="sticky top-0 z-40 flex items-center gap-3 px-4 py-2 backdrop-blur border-b border-b-slate-100 dark:border-b-slate-700 bg-white/90 dark:bg-slate-800/90">
             <button
               onClick={() => setSidebarVisible(!sidebarVisible)}
               className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
@@ -433,7 +435,7 @@ export default function App() {
           )}
         </div>
         {/* Right: AI Chat Panel */}
-        <div className={`${sidebarVisible ? 'w-1/2' : 'w-[40%]'} h-full bg-slate-50 flex flex-col relative transition-all`}>
+        <div className={`${sidebarVisible ? 'w-1/2' : 'w-[40%]'} h-full bg-slate-50 dark:bg-slate-900 flex flex-col relative transition-all`}>
           <ChatPanel
             systemContext={systemContext}
             autoSendPrompt={autoSendPrompt}

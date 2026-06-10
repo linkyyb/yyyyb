@@ -1,24 +1,6 @@
 @import "tailwindcss";
 
-:root {
-  --bg: #f8fafc;
-  --bg-card: #ffffff;
-  --bg-sidebar: #ffffff;
-  --text: #0f172a;
-  --text-secondary: #64748b;
-  --border: #e2e8f0;
-  --hover: #f1f5f9;
-}
-
-.dark {
-  --bg: #0f172a;
-  --bg-card: #1e293b;
-  --bg-sidebar: #1e293b;
-  --text: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --border: #334155;
-  --hover: #1e293b;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer components {
   .markdown-body {
