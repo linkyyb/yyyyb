@@ -8,17 +8,22 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
   const containerRef = useRef<HTMLDivElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const isDrawing = useRef(false);
+  const lastPoint = useRef<{x:number;y:number}|null>(null);
+  const lastMid = useRef<{x:number;y:number}|null>(null);
+  const saveTimeout = useRef<any>(null);
   const [mode, setMode] = useState<'draw'|'write'>('write');
   const [drawColor, setDrawColor] = useState('#1e40af');
   const [drawSize, setDrawSize] = useState(2.5);
   const [text, setText] = useState(() => saved && !saved.startsWith('data:') ? saved : '');
 
-  // Setup crisp canvas at native device resolution
+  const initDone = useRef(false);
+  // Setup canvas ONCE when entering draw mode, not on every save
   useEffect(() => {
-    if (mode !== 'draw') return;
+    if (mode !== 'draw') { initDone.current = false; return; }
     const canvas = canvasRef.current;
     const container = containerRef.current;
-    if (!canvas || !container) return;
+    if (!canvas || !container || initDone.current) return;
+    initDone.current = true;
 
     const dpr = window.devicePixelRatio || 1;
     const w = container.clientWidth;
@@ -37,36 +42,12 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
     ctx.imageSmoothingEnabled = false;
     ctxRef.current = ctx;
 
-    // Restore saved drawing
+    // Restore saved if exists
     if (saved && saved.startsWith('data:image')) {
       const img = new Image();
       img.onload = () => ctx.drawImage(img, 0, 0, w, h);
       img.src = saved;
     }
-
-    const resize = () => {
-      const dpr2 = window.devicePixelRatio || 1;
-      const w2 = container.clientWidth;
-      const h2 = container.clientHeight;
-      // Save current drawing before resize
-      const dataUrl = canvas.toDataURL();
-      canvas.width = w2 * dpr2;
-      canvas.height = h2 * dpr2;
-      canvas.style.width = w2 + 'px';
-      canvas.style.height = h2 + 'px';
-      const ctx2 = canvas.getContext('2d')!;
-      ctx2.scale(dpr2, dpr2);
-      ctx2.lineCap = 'round'; ctx2.lineJoin = 'round';
-      ctx2.strokeStyle = drawColor; ctx2.lineWidth = drawSize;
-      ctx2.imageSmoothingEnabled = false;
-      ctxRef.current = ctx2;
-      // Restore
-      const img = new Image();
-      img.onload = () => ctx2.drawImage(img, 0, 0, w2, h2);
-      img.src = dataUrl;
-    };
-    window.addEventListener('resize', resize);
-    return () => window.removeEventListener('resize', resize);
   }, [mode, saved]);
 
   useEffect(() => {
@@ -81,12 +62,11 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
   const startDraw = (e: React.PointerEvent) => {
     if (e.pointerType !== 'pen' && e.pointerType !== 'mouse') return;
     const ctx = ctxRef.current; if (!ctx) return;
-    // Adjust line width by pressure (if available)
     const pressure = (e as any).pressure || 0.5;
     ctx.lineWidth = drawSize * (0.3 + pressure * 0.7);
     const { x, y } = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
+    lastPoint.current = { x, y };
+    lastMid.current = { x, y };
     isDrawing.current = true;
   };
 
@@ -94,17 +74,30 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
     if (!isDrawing.current) return;
     const ctx = ctxRef.current; if (!ctx) return;
     const { x, y } = getPos(e);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    // Start a new small path from this point for smooth continuation
+    const lp = lastPoint.current!;
+    const mid = { x: (lp.x + x) / 2, y: (lp.y + y) / 2 };
+    const lm = lastMid.current!;
+    const pressure = (e as any).pressure || 0.5;
+    ctx.lineWidth = drawSize * (0.3 + pressure * 0.7);
+    ctx.strokeStyle = drawColor;
     ctx.beginPath();
-    ctx.moveTo(x, y);
+    ctx.moveTo(lm.x, lm.y);
+    ctx.quadraticCurveTo(lp.x, lp.y, mid.x, mid.y);
+    ctx.stroke();
+    lastPoint.current = { x, y };
+    lastMid.current = mid;
   };
 
   const stopDraw = () => {
     if (!isDrawing.current) return;
     isDrawing.current = false;
-    onSave(canvasRef.current!.toDataURL());
+    const ctx = ctxRef.current;
+    const lp = lastPoint.current!;
+    const lm = lastMid.current!;
+    if (ctx && lp) { ctx.beginPath(); ctx.moveTo(lm.x, lm.y); ctx.lineTo(lp.x, lp.y); ctx.stroke(); }
+    lastPoint.current = null; lastMid.current = null;
+    clearTimeout(saveTimeout.current);
+    saveTimeout.current = setTimeout(() => onSave(canvasRef.current?.toDataURL() || ''), 300);
   };
 
   const clearCanvas = () => {
