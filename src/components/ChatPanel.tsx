@@ -195,6 +195,7 @@ interface ChatPanelProps {
   setChatWordClickEnabled?: (v: boolean) => void;
   wordGrammarAnalysisEnabled?: boolean;
   setWordGrammarAnalysisEnabled?: (v: boolean) => void;
+  darkMode?: boolean;
 }
 
 function makeSummary(text: string): string {

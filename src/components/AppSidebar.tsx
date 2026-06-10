@@ -22,6 +22,7 @@ interface AppSidebarProps {
   onDeleteBookmark: (id: string) => void;
   onDeleteVocab: (id: string) => void;
   completedQuestions?: Set<string>;
+  darkMode?: boolean;
 }
 
 const isCustomExam = (id: string) => id.startsWith('custom-');

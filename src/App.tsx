@@ -297,7 +297,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen font-sans overflow-hidden bg-[var(--bg)] text-[var(--text)]">
+    <div className={`flex h-screen font-sans overflow-hidden ${darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       {sidebarVisible && (
         <AppSidebar
           exams={exams}
@@ -317,13 +317,14 @@ export default function App() {
           onDeleteBookmark={handleDeleteBookmark}
           onDeleteVocab={handleDeleteVocab}
           completedQuestions={completedQuestions}
+        darkMode={darkMode}
         />
       )}
       <main className="flex-1 flex overflow-hidden">
         {/* Left: Reading Area */}
-        <div className={`${sidebarVisible ? 'w-1/2' : 'flex-[3]'} h-full overflow-y-auto border-r border-[var(--border)] bg-[var(--bg-card)] transition-all`} style={{fontSize: fontSize+'px'}}>
+        <div className={`${sidebarVisible ? 'w-1/2' : 'flex-[3]'} h-full overflow-y-auto ${darkMode ? 'border-r-slate-700 bg-slate-800' : 'border-r-slate-200 bg-white'} border-r transition-all`} style={{fontSize: fontSize+'px'}}>
           {/* Inline toolbar — blends with reading header */}
-          <div className="sticky top-0 z-40 flex items-center gap-3 px-4 py-2 bg-[var(--bg-card)]/90 backdrop-blur border-b border-[var(--border)]">
+          <div className={`sticky top-0 z-40 flex items-center gap-3 px-4 py-2 backdrop-blur border-b ${darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-slate-100'}`}>
             <button
               onClick={() => setSidebarVisible(!sidebarVisible)}
               className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
@@ -445,6 +446,7 @@ export default function App() {
             onWordClick={chatWordClick ? (word, x, y) => setWordPopup({ word, sentence: '', x, y }) : undefined}
             chatWordClickEnabled={chatWordClick}
             setChatWordClickEnabled={setChatWordClick}
+            darkMode={darkMode}
             wordGrammarAnalysisEnabled={wordGrammarAnalysis}
             setWordGrammarAnalysisEnabled={setWordGrammarAnalysis}
           />
