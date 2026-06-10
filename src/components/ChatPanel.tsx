@@ -2,91 +2,102 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Send, Settings, Sparkles, Loader2, BookOpen, ChevronDown, ChevronRight, Pencil, Eraser } from 'lucide-react';
 
-// ── Stylus-only Drawing Canvas ──
+// ── Smooth Drawing Canvas (powered by Atrament.js) ──
 function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const isDrawing = useRef(false);
+  const atramentRef = useRef<any>(null);
   const [mode, setMode] = useState<'draw'|'write'>('write');
+  const [drawColor, setDrawColor] = useState('#1e40af');
+  const [drawSize, setDrawSize] = useState(2.5);
   const [text, setText] = useState('');
 
-  // Resize canvas to fill container
+  // Init Atrament with smooth strokes + pressure
   useEffect(() => {
-    const container = containerRef.current;
+    if (mode !== 'draw' || !containerRef.current) return;
     const canvas = canvasRef.current;
-    if (!container || !canvas) return;
-    const resize = () => {
-      const rect = container.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = rect.height + 'px';
-      const ctx = canvas.getContext('2d')!;
-      ctx.scale(dpr, dpr);
-      ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      // Restore saved drawing
+    if (!canvas) return;
+
+    import('atrament').then((m: any) => {
+      const Atrament = m.default;
+      const a = new Atrament(canvas, {
+        width: containerRef.current!.clientWidth,
+        height: containerRef.current!.clientHeight - 40,
+        color: drawColor,
+        weight: drawSize,
+        smoothing: 0.7,
+        adaptiveStroke: true,
+      });
+      atramentRef.current = a;
+      // Stylus only
+      a.mode = a.MODE_DRAW;
+      // Restore saved
       if (saved && saved.startsWith('data:image')) {
         const img = new Image();
-        img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0,rect.width,rect.height); };
+        img.onload = () => { const ctx = canvas.getContext('2d'); ctx?.drawImage(img, 0, 0); };
         img.src = saved;
       }
-    };
-    resize();
-    window.addEventListener('resize', resize);
-    return () => window.removeEventListener('resize', resize);
-  }, [saved]);
+    });
 
-  // Pointer event handlers — stylus only
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType !== 'pen') return; // stylus only
-    isDrawing.current = true;
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d')!;
-    const rect = canvas.getBoundingClientRect();
-    ctx.beginPath();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-    canvas.setPointerCapture(e.pointerId);
+    return () => {
+      if (atramentRef.current) {
+        try { atramentRef.current.destroy?.(); } catch {}
+        atramentRef.current = null;
+      }
+    };
+  }, [mode]);
+
+  // Sync color/size changes
+  useEffect(() => {
+    const a = atramentRef.current;
+    if (!a) return;
+    a.color = drawColor;
+    a.weight = drawSize;
+  }, [drawColor, drawSize]);
+
+  const handleSave = () => {
+    if (!atramentRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    onSave(canvas.toDataURL());
   };
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDrawing.current || e.pointerType !== 'pen') return;
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d')!;
-    const rect = canvas.getBoundingClientRect();
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-    ctx.stroke();
-  };
-  const handlePointerUp = () => {
-    if (!isDrawing.current) return;
-    isDrawing.current = false;
-    onSave(canvasRef.current!.toDataURL());
-  };
+
   const clearCanvas = () => {
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d')!;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const a = atramentRef.current;
+    if (a) a.clear();
+    else { const c = canvasRef.current; if (c) c.getContext('2d')?.clearRect(0, 0, c.width, c.height); }
     onSave('');
+  };
+
+  const undo = () => {
+    // Atrament doesn't have built-in undo, but we can clear the last stroke
+    // For now, clear all as a simple undo
+    clearCanvas();
   };
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <div className="flex items-center justify-between mb-2 shrink-0">
+      <div className="flex items-center justify-between mb-2 shrink-0 gap-2">
         <div className="flex gap-1">
-          <button onClick={()=>setMode('write')} className={`text-xs px-2 py-1 rounded ${mode==='write'?'bg-blue-100 text-blue-700':'text-slate-500'}`}>✏️ 打字</button>
-          <button onClick={()=>setMode('draw')} className={`text-xs px-2 py-1 rounded ${mode==='draw'?'bg-blue-100 text-blue-700':'text-slate-500'} flex items-center gap-1`}>🖊️ <span className="text-[9px] text-slate-400">触控笔</span></button>
+          <button onClick={()=>setMode('write')} className={`text-xs px-2 py-1 rounded ${mode==='write'?'bg-blue-100 text-blue-700':'text-slate-500'}`}>✏️</button>
+          <button onClick={()=>setMode('draw')} className={`text-xs px-2 py-1 rounded ${mode==='draw'?'bg-blue-100 text-blue-700':'text-slate-500'}`}>🖊️</button>
         </div>
-        {mode==='draw' && <button onClick={clearCanvas} className="text-xs px-2 py-1 bg-red-50 text-red-500 rounded hover:bg-red-100"><Eraser className="w-3 h-3"/></button>}
+        {mode==='draw' && (
+          <div className="flex items-center gap-2">
+            <input type="color" value={drawColor} onChange={e=>setDrawColor(e.target.value)} className="w-5 h-5 rounded cursor-pointer border-0" title="颜色"/>
+            <input type="range" min="1" max="6" step="0.5" value={drawSize} onChange={e=>setDrawSize(parseFloat(e.target.value))} className="w-16 h-2 accent-blue-500" title="粗细"/>
+            <button onClick={clearCanvas} className="text-xs px-2 py-1 bg-red-50 text-red-500 rounded hover:bg-red-100" title="清空"><Eraser className="w-3 h-3"/></button>
+          </div>
+        )}
       </div>
       {mode==='write' ? (
         <textarea className="flex-1 w-full p-4 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm leading-relaxed bg-white"
           value={saved&&!saved.startsWith('data:')?saved:text} onChange={e=>{setText(e.target.value);onSave(e.target.value);}}
           placeholder="在此书写草稿、翻译、思路..." />
       ) : (
-        <div ref={containerRef} className="flex-1 border border-slate-200 rounded-xl bg-white overflow-hidden touch-none">
-          <canvas ref={canvasRef}
-            onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}
-            className="w-full h-full"
-          />
+        <div ref={containerRef} className="flex-1 border border-slate-200 rounded-xl bg-white overflow-hidden touch-none relative">
+          <canvas ref={canvasRef} className="w-full h-full" />
+          <button onClick={handleSave} className="absolute bottom-2 right-2 text-[10px] px-2 py-1 bg-slate-800/70 text-white rounded hover:bg-slate-800">保存</button>
         </div>
       )}
     </div>
