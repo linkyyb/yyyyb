@@ -20,7 +20,7 @@ function WordCard({ item, onExplainWord, onWordClick, onBookmark, listTitle }: {
   const hasRich = (item.definitions?.length || 0) > 0 || (item.examples?.length || 0) > 0 || (item.synonyms?.length || 0) > 0 || (item.phrases?.length || 0) > 0 || !!item.mnemonic;
 
   return (
-    <div className="bg-white border border-slate-200 hover:border-green-400 rounded-xl shadow-sm hover:shadow-md transition-all group overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:border-slate-600 hover:border-green-400 rounded-xl shadow-sm hover:shadow-md transition-all group overflow-hidden">
       {/* Header: always visible */}
       <div className="p-4">
         <div className="flex justify-between items-start mb-1">
@@ -77,7 +77,7 @@ function WordCard({ item, onExplainWord, onWordClick, onBookmark, listTitle }: {
 
       {/* Expanded rich content */}
       {expanded && hasRich && (
-        <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
+        <div className="px-4 pb-4 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-3">
           {item.definitions && item.definitions.length > 0 && (
             <div className="space-y-1">
               <p className="text-[10px] font-bold text-slate-400 uppercase">词性 & 词义</p>
@@ -94,7 +94,7 @@ function WordCard({ item, onExplainWord, onWordClick, onBookmark, listTitle }: {
             <div className="space-y-1.5">
               <p className="text-[10px] font-bold text-slate-400 uppercase">例句</p>
               {item.examples.slice(0, 3).map((ex, i) => (
-                <div key={i} className="bg-slate-50 border border-slate-100 rounded-lg p-2">
+                <div key={i} className="bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-700 rounded-lg p-2">
                   <p className="text-xs text-slate-700 leading-relaxed">{ex.en}</p>
                   <p className="text-[10px] text-slate-500 mt-0.5">{ex.zh}</p>
                 </div>
@@ -156,7 +156,7 @@ export default function VocabViewer({ vocabList, onExplainWord, onWordClick, onB
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
-      <div className="p-6 bg-white border-b border-slate-200 shrink-0">
+      <div className="p-6 bg-white border-b border-slate-200 dark:border-slate-600 shrink-0">
         <h2 className="text-2xl font-bold text-slate-900 mb-2">{vocabList.title}</h2>
         <div className="flex items-center gap-4 text-sm text-slate-500 mb-6">
           <span>共 {vocabList.words.length} 个单词</span>
@@ -172,7 +172,7 @@ export default function VocabViewer({ vocabList, onExplainWord, onWordClick, onB
             placeholder="搜索单词、释义、同义词、短语..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-8 py-2.5 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors text-sm"
+            className="w-full pl-10 pr-8 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors text-sm"
           />
           {searchTerm && (
             <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">

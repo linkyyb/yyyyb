@@ -29,7 +29,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
       <div className="bg-white w-[400px] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50">
           <div className="flex items-center gap-2 text-slate-800 font-bold">
             <Settings className="w-5 h-5 text-blue-500" />
             AI 模型设置
@@ -50,7 +50,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
               value={localKey}
               onChange={(e) => setLocalKey(e.target.value)}
               placeholder="sk-..."
-              className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
             <p className="text-[10px] text-slate-400">密钥仅存在您的本地浏览器中通过服务器转发请求，不作其他记录。</p>
           </div>
@@ -60,7 +60,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, mode
             <select 
               value={model}
               onChange={(e) => setModel(e.target.value as DeepSeekModel)}
-              className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="deepseek-v4-flash">DeepSeek V4 Flash</option>
               <option value="deepseek-v4-pro">DeepSeek V4 Pro</option>

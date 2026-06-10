@@ -125,7 +125,7 @@ export default function UploadExamModal({ isOpen, onClose, onUploadSuccess, apiK
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
       <div className="bg-white w-[480px] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50">
           <div className="flex items-center gap-2 text-slate-800 font-bold">
             <Upload className="w-5 h-5 text-blue-500" />
             导入历年真题
@@ -143,7 +143,7 @@ export default function UploadExamModal({ isOpen, onClose, onUploadSuccess, apiK
               value={examYearTitle}
               onChange={(e) => setExamYearTitle(e.target.value)}
               disabled={isUploading}
-              className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-semibold text-slate-800 disabled:opacity-50"
+              className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-semibold text-slate-800 disabled:opacity-50"
             />
           </div>
 
@@ -151,7 +151,7 @@ export default function UploadExamModal({ isOpen, onClose, onUploadSuccess, apiK
              className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
                isUploading ? 'border-yellow-400 bg-yellow-50 cursor-not-allowed'
                : file ? 'border-blue-500 bg-blue-50'
-               : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50 cursor-pointer'
+               : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50 dark:bg-slate-700 cursor-pointer'
              }`}
              onClick={() => !file && !isUploading && fileInputRef.current?.click()}
           >

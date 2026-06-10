@@ -64,9 +64,9 @@ export default function GlobalProgressIndicator() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="bg-white border border-slate-200 shadow-xl rounded-2xl w-80 mb-4 overflow-hidden pointer-events-auto flex flex-col max-h-[400px]"
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:border-slate-600 shadow-xl rounded-2xl w-80 mb-4 overflow-hidden pointer-events-auto flex flex-col max-h-[400px]"
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50">
                <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
                  {hasActiveTasks && <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />}
                  {!hasActiveTasks && errorTasksCount > 0 && <AlertTriangle className="w-4 h-4 text-red-500" />}
@@ -79,7 +79,7 @@ export default function GlobalProgressIndicator() {
 
             <div className="overflow-y-auto flex-1 p-2 space-y-2">
                {tasks.map(task => (
-                 <div key={task.id} className={`bg-slate-50 border rounded-xl p-3 relative group ${
+                 <div key={task.id} className={`bg-slate-50 dark:bg-slate-700 border rounded-xl p-3 relative group ${
                    task.status === 'error' ? 'border-red-200 bg-red-50/50' : 'border-slate-100'
                  }`}>
                     <button
@@ -142,7 +142,7 @@ export default function GlobalProgressIndicator() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="pointer-events-auto bg-white border border-slate-200 shadow-lg rounded-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors"
+          className="pointer-events-auto bg-white border border-slate-200 dark:border-slate-600 shadow-lg rounded-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 dark:bg-slate-700 transition-colors"
         >
            {hasActiveTasks ? (
              <div className="relative">

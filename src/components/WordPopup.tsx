@@ -211,9 +211,9 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
   const displayDefinition = existingEntry?.definition || lookup?.definition || '';
 
   return (
-    <div ref={popupRef} style={popupStyle} className={`${showGrammarPanel ? 'w-[560px]' : 'w-[320px]'} max-h-[450px] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150`}>
+    <div ref={popupRef} style={popupStyle} className={`${showGrammarPanel ? 'w-[560px]' : 'w-[320px]'} max-h-[450px] bg-white border border-slate-200 dark:border-slate-600 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-100 shrink-0">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-100 dark:border-slate-700 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <div className="min-w-0 flex-1">
             <span className="font-bold text-base text-slate-800">{word}</span>
@@ -288,7 +288,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
           <div className="space-y-1.5">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1"><Sparkles className="w-3 h-3 text-blue-400" /> AI 例句</p>
             {aiExamples.slice(0, 2).map((ex, i) => (
-              <div key={i} className="bg-slate-50 border border-slate-100 rounded-lg p-2">
+              <div key={i} className="bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-700 rounded-lg p-2">
                 <p className="text-xs text-slate-700 leading-relaxed">{ex}</p>
               </div>
             ))}
@@ -344,14 +344,14 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
 
         {/* Sentence context */}
         {sentence && (
-          <p className="text-[10px] text-slate-400 italic border-t border-slate-100 pt-2">
+          <p className="text-[10px] text-slate-400 italic border-t border-slate-100 dark:border-slate-700 pt-2">
             原文：...{sentence.substring(0, 80)}{sentence.length > 80 ? '...' : ''}
           </p>
         )}
         </div>
 
         {showGrammarPanel && (
-          <aside className="border-l border-slate-100 pl-4 space-y-2 min-w-0">
+          <aside className="border-l border-slate-100 dark:border-slate-700 pl-4 space-y-2 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">词形语法</p>
               {grammarLoading && <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin" />}
@@ -370,7 +370,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
                 {grammar.sentenceRole && <p className="text-xs text-slate-600"><span className="font-bold text-slate-500">句中成分：</span>{grammar.sentenceRole}</p>}
                 {grammar.morphology && <p className="text-xs text-slate-600"><span className="font-bold text-slate-500">形态：</span>{grammar.morphology}</p>}
                 {grammar.grammarReason && (
-                  <div className="rounded-lg bg-slate-50 border border-slate-100 p-2">
+                  <div className="rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-700 p-2">
                     <p className="text-[10px] text-slate-400 font-bold mb-1">为什么用这个词形</p>
                     <p className="text-xs text-slate-700 leading-relaxed">{grammar.grammarReason}</p>
                   </div>
@@ -387,7 +387,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
       </div>
 
       {/* Actions */}
-      <div className="flex border-t border-slate-100 shrink-0">
+      <div className="flex border-t border-slate-100 dark:border-slate-700 shrink-0">
         <button onClick={() => { onAddToVocab(word, displayDefinition, sentence, lookup || (existingEntry as any) || undefined); onClose(); }}
           className="flex-1 py-2.5 text-xs font-bold text-green-600 hover:bg-green-50 transition-colors flex items-center justify-center gap-1.5 border-r border-slate-100">
           <BookmarkPlus className="w-3.5 h-3.5" />{existingEntry ? '已收藏 ✓' : '加入词汇本'}

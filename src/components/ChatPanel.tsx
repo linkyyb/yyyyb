@@ -139,11 +139,11 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
         )}
       </div>
       {mode==='write' ? (
-        <textarea className="flex-1 w-full p-4 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm leading-relaxed bg-white"
+        <textarea className="flex-1 w-full p-4 border border-slate-200 dark:border-slate-600 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm leading-relaxed bg-white"
           value={text} onChange={e=>{setText(e.target.value);onSave(e.target.value);}}
           placeholder="在此书写草稿、翻译、思路..." />
       ) : (
-        <div ref={containerRef} className="flex-1 border border-slate-200 rounded-xl bg-white overflow-hidden touch-none relative select-none" style={{WebkitUserSelect:'none',WebkitTouchCallout:'none'}}>
+        <div ref={containerRef} className="flex-1 border border-slate-200 dark:border-slate-600 rounded-xl bg-white overflow-hidden touch-none relative select-none" style={{WebkitUserSelect:'none',WebkitTouchCallout:'none'}}>
           <canvas ref={canvasRef}
             onPointerDown={startDraw} onPointerMove={draw} onPointerUp={stopDraw} onPointerLeave={stopDraw}
             className="block"
@@ -336,7 +336,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
             <Sparkles className="w-5 h-5" />
           </div>
           <span className="font-bold text-slate-800">AI Tutor</span>
-          <span className="ml-2 text-xs px-2 py-1 bg-slate-100 text-slate-500 rounded-full border border-slate-200 font-mono">
+          <span className="ml-2 text-xs px-2 py-1 bg-slate-100 text-slate-500 rounded-full border border-slate-200 dark:border-slate-600 font-mono">
             {model}
           </span>
         </div>
@@ -382,12 +382,12 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
               msg.role === 'user'
                 ? msg.isAuto ? 'bg-blue-50 border border-blue-200 text-slate-700 rounded-br-sm'
                   : 'bg-blue-600 text-white rounded-br-sm shadow-md'
-                : 'bg-white border border-slate-200 text-slate-800 rounded-bl-sm shadow-sm'
+                : 'bg-white border border-slate-200 dark:border-slate-600 text-slate-800 rounded-bl-sm shadow-sm'
             }`}>
               {msg.role === 'assistant' ? (
                  <div className="space-y-4">
                     {msg.reasoning_content && (
-                      <div className="mb-4 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-600 font-mono overflow-auto max-h-60 relative group">
+                      <div className="mb-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl p-4 text-sm text-slate-600 font-mono overflow-auto max-h-60 relative group">
                          <div className="absolute top-2 right-2 flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 bg-white/80 px-2 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                              <Sparkles className="w-3 h-3 text-blue-500" /> Thinking
                          </div>
@@ -432,7 +432,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         )})}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-6 py-4 shadow-sm text-slate-400 flex items-center gap-2">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:border-slate-600 rounded-2xl rounded-bl-sm px-6 py-4 shadow-sm text-slate-400 flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
               <span className="text-sm">DeepSeek is thinking...</span>
             </div>
@@ -471,7 +471,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="有任何问题都可以问我..."
-              className="w-full bg-slate-100 border-transparent focus:bg-white focus:border-blue-500 rounded-xl px-4 py-3 pr-12 resize-none h-[52px] min-h-[52px] max-h-32 text-sm transition-all focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400 scrollbar-hide flex items-center"
+              className="w-full bg-slate-100 border-transparent focus:bg-white dark:focus:bg-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 pr-12 resize-none h-[52px] min-h-[52px] max-h-32 text-sm transition-all focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400 scrollbar-hide flex items-center"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
