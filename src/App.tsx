@@ -326,10 +326,10 @@ export default function App() {
         {/* Left: Reading Area */}
         <div className={`${sidebarVisible ? 'w-1/2' : 'flex-[3]'} h-full overflow-y-auto border-r border-r-slate-200 dark:border-r-slate-700 bg-white dark:bg-slate-800 transition-all`} style={{fontSize: fontSize+'px'}}>
           {/* Inline toolbar — blends with reading header */}
-          <div className="sticky top-0 z-40 flex items-center gap-3 px-4 py-2 backdrop-blur border-b border-b-slate-100 dark:border-b-slate-700 bg-white/90 dark:bg-slate-800/90">
+          <div className="sticky top-0 z-40 flex items-center gap-3 px-4 py-2 backdrop-blur border-b border-b-slate-100 dark:border-b-slate-700 bg-white dark:bg-slate-800/90 dark:bg-slate-800/90">
             <button
               onClick={() => setSidebarVisible(!sidebarVisible)}
-              className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
+              className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600 dark:text-slate-300"
               title={sidebarVisible ? '隐藏侧边栏' : '显示侧边栏'}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
@@ -361,7 +361,7 @@ export default function App() {
                   else setScanningPhrases(false);
                 } else { setPhraseHighlights([]); }
               }}
-              className={`px-2 py-1 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${phraseMode ? 'bg-yellow-200 text-yellow-800' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`px-2 py-1 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${phraseMode ? 'bg-yellow-200 text-yellow-800' : 'text-slate-400 hover:text-slate-600 dark:text-slate-300'}`}
               title="切换短语/单词模式"
             >{scanningPhrases ? <span className="inline-block w-3 h-3 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></span> : null}{phraseMode ? '✏️ 短语' : '🔤 单词'}</button>
             {phraseMode && (
@@ -373,7 +373,7 @@ export default function App() {
                   .then(r=>r.json()).then(d=>{
                     if(d.phrases){ setPhraseHighlights(d.phrases); localStorage.setItem('cet6_phrase_scan_'+selectedPassage.id,JSON.stringify(d.phrases)); }
                   }).catch(()=>{}).finally(()=>setScanningPhrases(false));
-              }} className="px-1.5 py-1 rounded text-[10px] text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              }} className="px-1.5 py-1 rounded text-[10px] text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition-colors"
                 title="重新扫描短语">🔄</button>
             )}
             <span className="text-slate-300">|</span>
@@ -405,22 +405,22 @@ export default function App() {
             />
           ) : activeTab === 'bookmarks' ? (
             <div className="p-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">我的收藏夹</h2>
-              <p className="text-slate-500 mb-8">点击收藏的书签可以随时向 AI 导师发起复习请求，加强记忆。</p>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">我的收藏夹</h2>
+              <p className="text-slate-500 dark:text-slate-400 mb-8">点击收藏的书签可以随时向 AI 导师发起复习请求，加强记忆。</p>
               {bookmarks.length === 0 && <p className="text-slate-400 italic">空空如也。在阅读界面内标记您认为重要的内容吧！</p>}
               <div className="space-y-4">
                 {bookmarks.map((bm) => (
-                  <div key={bm.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                  <div key={bm.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-bold px-2 py-1 bg-purple-100 text-purple-700 rounded uppercase">
                         {bm.type === 'sentence' ? '句子' : bm.type === 'word' ? '词汇' : '往期真题'}
                       </span>
                       <button onClick={() => handleDeleteBookmark(bm.id)} className="text-red-400 hover:text-red-600 text-sm">删除</button>
                     </div>
-                    <p className="font-medium text-slate-800 mb-4">{bm.content}</p>
+                    <p className="font-medium text-slate-800 dark:text-slate-100 mb-4">{bm.content}</p>
                     <button
                       onClick={() => handleReviewBookmark(bm)}
-                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-sm transition-colors"
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold rounded-lg text-sm transition-colors"
                     >
                       让 AI 帮我复习
                     </button>

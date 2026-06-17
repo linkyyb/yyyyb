@@ -64,22 +64,22 @@ export default function AppSidebar({
             <div className="w-4 h-4 border-2 border-white rotate-45"></div>
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-tight text-slate-800 tracking-tight">四六级精读导师</h1>
+            <h1 className="font-bold text-lg leading-tight text-slate-800 dark:text-slate-100 tracking-tight">四六级精读导师</h1>
             <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">基于 DeepSeek AI</p>
           </div>
         </div>
       </div>
 
       <div className="flex bg-slate-50 dark:bg-slate-700 p-2 gap-1 border-b border-slate-100 dark:border-slate-600 shrink-0">
-        <button onClick={() => setActiveTab('exams')} className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1.5 transition-colors ${activeTab === 'exams' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+        <button onClick={() => setActiveTab('exams')} className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1.5 transition-colors ${activeTab === 'exams' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200'}`}>
           <Library className="w-3.5 h-3.5" /> 阅读题库
         </button>
-        <button onClick={() => setActiveTab('vocab')} className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1.5 transition-colors ${activeTab === 'vocab' ? 'bg-white text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+        <button onClick={() => setActiveTab('vocab')} className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1.5 transition-colors ${activeTab === 'vocab' ? 'bg-white dark:bg-slate-800 text-green-600 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200'}`}>
           <Search className="w-3.5 h-3.5" /> 词汇本
         </button>
-        <button onClick={() => setActiveTab('bookmarks')} className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1.5 transition-colors ${activeTab === 'bookmarks' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+        <button onClick={() => setActiveTab('bookmarks')} className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1.5 transition-colors ${activeTab === 'bookmarks' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200'}`}>
           <BookmarkIcon className="w-3.5 h-3.5" /> 收藏夹
-          {bookmarks.length > 0 && <span className="bg-slate-200 text-slate-600 px-1.5 rounded-full text-[9px]">{bookmarks.length}</span>}
+          {bookmarks.length > 0 && <span className="bg-slate-200 text-slate-600 dark:text-slate-300 px-1.5 rounded-full text-[9px]">{bookmarks.length}</span>}
         </button>
       </div>
 
@@ -96,7 +96,7 @@ export default function AppSidebar({
             {exams.length === 0 && (
               <div className="text-center p-6 border-2 border-dashed border-slate-200 rounded-xl space-y-3 mt-4">
                 <Library className="w-8 h-8 text-slate-300 mx-auto" />
-                <p className="text-xs text-slate-500 font-medium">暂无试卷库</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">暂无试卷库</p>
                 <p className="text-[10px] text-slate-400 leading-relaxed">点击右上角"导入题库"上传真题文档。</p>
               </div>
             )}
@@ -119,7 +119,7 @@ export default function AppSidebar({
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {isCollapsed ? <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
-                      <span className="text-xs font-bold text-slate-700 truncate">{exam.year}</span>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{exam.year}</span>
                       <span className="text-[10px] text-slate-400 truncate">{exam.title}</span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
@@ -154,7 +154,7 @@ export default function AppSidebar({
                                 key={passage.id}
                                 onClick={() => onSelect(exam.id, passage.id)}
                                 className={`w-full text-left p-2.5 rounded-lg flex items-center justify-between transition-colors border ${
-                                  isActive ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm' : 'bg-white dark:bg-slate-700 border-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600'
+                                  isActive ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm' : 'bg-white dark:bg-slate-800 dark:bg-slate-700 border-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600'
                                 }`}
                               >
                                 <span className="text-xs truncate pr-2" title={passage.title}>{passage.title}</span>
@@ -186,16 +186,16 @@ export default function AppSidebar({
             {vocabLists.length === 0 ? (
               <div className="text-center p-6 border-2 border-dashed border-slate-200 rounded-xl space-y-3 mt-4">
                 <Search className="w-8 h-8 text-slate-300 mx-auto" />
-                <p className="text-xs text-slate-500 font-medium">暂无自定义词汇库。</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">暂无自定义词汇库。</p>
               </div>
             ) : (
               vocabLists.map(list => (
-                <button key={list.id} onClick={() => onSelectVocab(list.id)} className={`w-full text-left p-3 rounded-lg group relative transition-colors border shadow-sm flex flex-col gap-1 ${selectedVocabId === list.id ? 'bg-green-50 border-green-200 text-green-800' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+                <button key={list.id} onClick={() => onSelectVocab(list.id)} className={`w-full text-left p-3 rounded-lg group relative transition-colors border shadow-sm flex flex-col gap-1 ${selectedVocabId === list.id ? 'bg-green-50 border-green-200 text-green-800' : 'bg-white dark:bg-slate-800 border-slate-200 hover:bg-slate-50 text-slate-700 dark:text-slate-200'}`}>
                   <div className="flex justify-between items-start w-full">
                     <span className="text-sm font-bold truncate pr-6">{list.title}</span>
                     {selectedVocabId === list.id && <div className="w-2 h-2 rounded-full bg-green-500 shrink-0 mt-1.5"></div>}
                   </div>
-                  <span className="text-[10px] text-slate-500 flex items-center gap-1"><FileText className="w-3 h-3" />{list.words.length} 个单词</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1"><FileText className="w-3 h-3" />{list.words.length} 个单词</span>
                   <button onClick={(e) => { e.stopPropagation(); onDeleteVocab(list.id); }} className={`absolute top-2 right-2 text-slate-300 hover:text-red-500 transition-opacity ${selectedVocabId === list.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                     <X className="w-4 h-4" />
                   </button>
@@ -212,12 +212,12 @@ export default function AppSidebar({
               <p className="text-xs text-slate-400 px-2 italic">您还没有收藏任何内容哦。</p>
             ) : (
               bookmarks.map((bm) => (
-                <div key={bm.id} className="bg-white border border-slate-200 hover:border-purple-300 rounded-lg p-3 transition-colors group cursor-pointer shadow-sm" onClick={() => onReviewBookmark(bm)}>
+                <div key={bm.id} className="bg-white dark:bg-slate-800 border border-slate-200 hover:border-purple-300 rounded-lg p-3 transition-colors group cursor-pointer shadow-sm" onClick={() => onReviewBookmark(bm)}>
                   <div className="flex justify-between items-start mb-1">
                     <span className="text-[10px] font-bold text-purple-600 uppercase bg-purple-50 px-1.5 py-0.5 rounded">{bm.type}</span>
                     <button onClick={(e) => { e.stopPropagation(); onDeleteBookmark(bm.id); }} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
                   </div>
-                  <p className="text-[13px] line-clamp-3 text-slate-700 leading-relaxed font-medium">{bm.content}</p>
+                  <p className="text-[13px] line-clamp-3 text-slate-700 dark:text-slate-200 leading-relaxed font-medium">{bm.content}</p>
                 </div>
               ))
             )}

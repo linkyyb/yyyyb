@@ -213,9 +213,9 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
           {SectionLabels[passage.section] || passage.section}
         </span>
       </div>
-      <h2 className="text-2xl font-bold text-slate-900 mb-2">{passage.title}</h2>
+      <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">{passage.title}</h2>
       {passage.instruction && (
-        <p className="text-sm text-slate-500 italic bg-slate-50 border border-slate-100 p-4 rounded-lg">{passage.instruction}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 italic bg-slate-50 border border-slate-100 p-4 rounded-lg">{passage.instruction}</p>
       )}
     </div>
   );
@@ -250,11 +250,11 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
     const isCorrectOpt = isRevealed && opt.key?.toUpperCase() === (q.correctAnswer || '').toUpperCase();
     const isWrongOpt = isRevealed && isSelected && opt.key?.toUpperCase() !== (q.correctAnswer || '').toUpperCase();
 
-    let cls = 'border-slate-200 bg-white hover:bg-blue-50 active:bg-blue-100 text-slate-700';
+    let cls = 'border-slate-200 bg-white dark:bg-slate-800 hover:bg-blue-50 active:bg-blue-100 text-slate-700 dark:text-slate-200';
     if (isRevealed) {
       if (isCorrectOpt) cls = 'border-green-400 bg-green-50 text-green-800 font-bold';
       else if (isWrongOpt) cls = 'border-red-400 bg-red-50 text-red-700';
-      else cls = 'border-slate-100 bg-white text-slate-400';
+      else cls = 'border-slate-100 bg-white dark:bg-slate-800 text-slate-400';
     } else if (isSelected) {
       cls = 'border-blue-400 bg-blue-50 text-blue-700 font-bold ring-2 ring-blue-400';
     }
@@ -271,7 +271,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
           isRevealed && isCorrectOpt ? 'bg-green-500 text-white'
           : isRevealed && isWrongOpt ? 'bg-red-500 text-white'
           : isSelected ? 'bg-blue-500 text-white'
-          : 'bg-slate-200 text-slate-600'
+          : 'bg-slate-200 text-slate-600 dark:text-slate-300'
         }`}>{opt.key}</span>
         <span className="flex-1">{opt.text}</span>
         {isRevealed && isCorrectOpt && <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />}
@@ -298,7 +298,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
               : `正确答案: ${q.correctAnswer || '(无)'}`}
           </p>
           {q.answerExplanation && (
-            <p className="text-xs text-slate-600 leading-relaxed">{q.answerExplanation}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{q.answerExplanation}</p>
           )}
         </div>
       </div>
@@ -342,7 +342,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
   const QCard = ({ q, children = null }: { q: any; children?: React.ReactNode }) => {
     const rev = revealedQuestions[q.id];
     return (
-      <div className={`bg-white border rounded-xl p-6 shadow-sm relative group transition-all ${
+      <div className={`bg-white dark:bg-slate-800 border rounded-xl p-6 shadow-sm relative group transition-all ${
         rev ? (isCorrect(q) ? 'border-green-300 bg-green-50/30' : isWrong(q) ? 'border-red-300 bg-red-50/30' : 'border-blue-200') : 'border-slate-200 hover:border-blue-200'
       }`}>
         <button
@@ -354,7 +354,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
         <div className="flex items-start gap-3 mb-4 pr-8">
           <span className="text-blue-500 font-bold text-sm bg-blue-50 w-7 h-7 rounded-full flex items-center justify-center shrink-0">{q.number}</span>
           <div>
-            <p className="font-bold text-slate-800 text-[15px]">{q.content}</p>
+            <p className="font-bold text-slate-800 dark:text-slate-100 text-[15px]">{q.content}</p>
             {revealedQuestions[q.id] && q.matchParagraph && (
               <span className="inline-block mt-1 bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded">→ 段落 {q.matchParagraph}</span>
             )}
@@ -390,7 +390,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
                     const rect = (e.target as HTMLElement).getBoundingClientRect();
                     onWordClick(w.trim(), '', rect.left, rect.bottom);
                   }}
-                  className="px-3 py-1.5 bg-white border border-amber-300 rounded-full text-sm font-medium text-slate-700 hover:bg-amber-100 cursor-pointer transition-colors shadow-sm"
+                  className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-amber-300 rounded-full text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-amber-100 cursor-pointer transition-colors shadow-sm"
                 >
                   {String.fromCharCode(65 + i)}. {w.trim()}
                 </span>
@@ -402,7 +402,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
         {/* Reading passage */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
-            <AlignLeft className="w-4 h-4 text-slate-500" />
+            <AlignLeft className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">填空短文 — hover 句尾 ✨ 解析句子</span>
           </div>
           <PassageBody />
@@ -411,7 +411,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
         {/* Questions: each blank choose from word bank */}
         {passage.questions.length > 0 && (
           <div className="border-t border-slate-200 pt-8">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
               <HelpCircle className="w-5 h-5 text-amber-500" />
               选择填空 — 点击选项作答，点击核对答案 ({passage.questions.length} 题)
             </h3>
@@ -442,14 +442,14 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
         <Header />
         <div className="mb-10 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
           <div className="flex items-center gap-2 mb-4">
-            <FileText className="w-4 h-4 text-slate-500" />
+            <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">阅读全文 — hover 句尾 ✨ 解析</span>
           </div>
           <PassageBody />
         </div>
         {passage.questions.length > 0 && (
           <div className="border-t border-slate-200 pt-8">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
               <HelpCircle className="w-5 h-5 text-purple-500" />
               段落匹配 — 每条陈述对应一个段落 ({passage.questions.length} 题)
             </h3>
@@ -467,11 +467,11 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
                         const isCorrectLet = isRev && letter === (q.correctAnswer || '').toUpperCase();
                         const isWrongLet = isRev && isSelected && letter !== (q.correctAnswer || '').toUpperCase();
 
-                        let btnCls = 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50';
+                        let btnCls = 'border-slate-200 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50';
                         if (isRev) {
                           if (isCorrectLet) btnCls = 'border-green-400 bg-green-100 text-green-800 font-bold';
                           else if (isWrongLet) btnCls = 'border-red-400 bg-red-50 text-red-600';
-                          else btnCls = 'border-slate-100 bg-white text-slate-300';
+                          else btnCls = 'border-slate-100 bg-white dark:bg-slate-800 text-slate-300';
                         } else if (isSelected) {
                           btnCls = 'border-purple-400 bg-purple-50 text-purple-700 font-bold ring-1 ring-purple-400';
                         }
@@ -509,7 +509,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
         <PassageBody />
         {passage.questions.length > 0 && (
           <div className="mt-16 border-t border-slate-200 pt-8">
-            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
               <HelpCircle className="w-6 h-6 text-blue-500" />
               选择题 — 先选再看答案 ({passage.questions.length} 题)
             </h3>
@@ -543,7 +543,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
               <Languages className="w-4 h-4 text-red-500" />
               <span className="text-xs font-bold text-red-600 uppercase tracking-wider">中文原文</span>
             </div>
-            <p className="text-lg leading-relaxed text-slate-800 font-serif whitespace-pre-wrap">{passage.sourceText}</p>
+            <p className="text-lg leading-relaxed text-slate-800 dark:text-slate-100 font-serif whitespace-pre-wrap">{passage.sourceText}</p>
           </div>
         )}
         {passage.wordBank && passage.wordBank.length > 0 && (
@@ -553,7 +553,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">参考词汇</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {passage.wordBank.map((w, i) => <span key={i} className="px-3 py-1 bg-white border border-blue-200 rounded-lg text-sm text-slate-600">{w}</span>)}
+              {passage.wordBank.map((w, i) => <span key={i} className="px-3 py-1 bg-white dark:bg-slate-800 border border-blue-200 rounded-lg text-sm text-slate-600 dark:text-slate-300">{w}</span>)}
             </div>
           </div>
         )}
@@ -610,7 +610,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
         <Header />
         {passage.questions.length > 0 && (
           <div>
-            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
               <HelpCircle className="w-6 h-6 text-indigo-500" />
               听力选择题 — 先选再看答案 ({passage.questions.length} 题)
             </h3>
@@ -640,7 +640,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
       <PassageBody />
       {passage.questions.length > 0 && (
         <div className="mt-16 border-t border-slate-200 pt-8">
-          <h3 className="text-xl font-bold text-slate-800 mb-6">做题与精讲</h3>
+          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">做题与精讲</h3>
           <div className="space-y-8">{passage.questions.map((q) => <QCard key={q.id} q={q} />)}</div>
         </div>
       )}

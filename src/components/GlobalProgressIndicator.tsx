@@ -64,15 +64,15 @@ export default function GlobalProgressIndicator() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:border-slate-600 shadow-xl rounded-2xl w-80 mb-4 overflow-hidden pointer-events-auto flex flex-col max-h-[400px]"
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-xl rounded-2xl w-80 mb-4 overflow-hidden pointer-events-auto flex flex-col max-h-[400px]"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50">
-               <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                  {hasActiveTasks && <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />}
                  {!hasActiveTasks && errorTasksCount > 0 && <AlertTriangle className="w-4 h-4 text-red-500" />}
                  后台处理任务 ({tasks.length})
                </h3>
-               <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600">
+               <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-300">
                  <X className="w-4 h-4" />
                </button>
             </div>
@@ -96,8 +96,8 @@ export default function GlobalProgressIndicator() {
                          {task.status === 'pending' && <FileText className="w-4 h-4 text-slate-400" />}
                        </div>
                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-800 truncate">{task.fileName}</p>
-                          <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-2 mt-0.5">
+                          <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">{task.fileName}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 mt-0.5">
                             {task.type === 'vocab' ? '词汇解析' : '真题解析'} • {getStatusText(task)}
                             {task.failedChunks > 0 && task.status === 'running' && (
                               <span className="text-red-400 ml-1">({task.failedChunks} 失败)</span>
@@ -120,7 +120,7 @@ export default function GlobalProgressIndicator() {
                           )}
 
                           {task.status === 'running' && (
-                             <p className="text-xs text-slate-500 mt-1.5 text-right w-full">
+                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 text-right w-full">
                                {task.progress}% ({task.completedChunks}/{task.totalChunks})
                              </p>
                           )}
@@ -142,7 +142,7 @@ export default function GlobalProgressIndicator() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="pointer-events-auto bg-white border border-slate-200 dark:border-slate-600 shadow-lg rounded-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 dark:bg-slate-700 transition-colors"
+          className="pointer-events-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-lg rounded-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 dark:bg-slate-700 transition-colors"
         >
            {hasActiveTasks ? (
              <div className="relative">
@@ -157,7 +157,7 @@ export default function GlobalProgressIndicator() {
            ) : (
              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
            )}
-           <div className="text-sm font-bold text-slate-700">
+           <div className="text-sm font-bold text-slate-700 dark:text-slate-200">
              {hasActiveTasks ? `${runningTasksCount} 个任务运行中`
                : errorTasksCount > 0 ? `${errorTasksCount} 个任务失败`
                : '任务已完成'}

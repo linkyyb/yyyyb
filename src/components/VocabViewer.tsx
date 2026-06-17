@@ -20,7 +20,7 @@ function WordCard({ item, onExplainWord, onWordClick, onBookmark, listTitle }: {
   const hasRich = (item.definitions?.length || 0) > 0 || (item.examples?.length || 0) > 0 || (item.synonyms?.length || 0) > 0 || (item.phrases?.length || 0) > 0 || !!item.mnemonic;
 
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:border-slate-600 hover:border-green-400 rounded-xl shadow-sm hover:shadow-md transition-all group overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 hover:border-green-400 rounded-xl shadow-sm hover:shadow-md transition-all group overflow-hidden">
       {/* Header: always visible */}
       <div className="p-4">
         <div className="flex justify-between items-start mb-1">
@@ -70,7 +70,7 @@ function WordCard({ item, onExplainWord, onWordClick, onBookmark, listTitle }: {
 
         {/* Summary definition */}
         {item.definition && (
-          <p className="text-sm text-slate-600 line-clamp-2">{item.definition}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2">{item.definition}</p>
         )}
         {!item.definition && !hasRich && <p className="text-xs text-slate-400 italic">暂无释义</p>}
       </div>
@@ -84,7 +84,7 @@ function WordCard({ item, onExplainWord, onWordClick, onBookmark, listTitle }: {
               {item.definitions.map((d, i) => (
                 <div key={i} className="flex gap-2">
                   <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded shrink-0 min-w-[2rem] text-center">{d.pos}</span>
-                  <span className="text-sm text-slate-700">{d.meaning}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-200">{d.meaning}</span>
                 </div>
               ))}
             </div>
@@ -95,8 +95,8 @@ function WordCard({ item, onExplainWord, onWordClick, onBookmark, listTitle }: {
               <p className="text-[10px] font-bold text-slate-400 uppercase">例句</p>
               {item.examples.slice(0, 3).map((ex, i) => (
                 <div key={i} className="bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-700 rounded-lg p-2">
-                  <p className="text-xs text-slate-700 leading-relaxed">{ex.en}</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">{ex.zh}</p>
+                  <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">{ex.en}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{ex.zh}</p>
                 </div>
               ))}
             </div>
@@ -116,8 +116,8 @@ function WordCard({ item, onExplainWord, onWordClick, onBookmark, listTitle }: {
               <p className="text-[10px] font-bold text-slate-400 uppercase">短语搭配</p>
               {item.phrases.slice(0, 3).map((p, i) => (
                 <div key={i} className="flex gap-2 text-xs">
-                  <span className="font-bold text-slate-600 shrink-0">{p.phrase}</span>
-                  <span className="text-slate-500">{p.meaning}</span>
+                  <span className="font-bold text-slate-600 dark:text-slate-300 shrink-0">{p.phrase}</span>
+                  <span className="text-slate-500 dark:text-slate-400">{p.meaning}</span>
                 </div>
               ))}
             </div>
@@ -156,9 +156,9 @@ export default function VocabViewer({ vocabList, onExplainWord, onWordClick, onB
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
-      <div className="p-6 bg-white border-b border-slate-200 dark:border-slate-600 shrink-0">
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">{vocabList.title}</h2>
-        <div className="flex items-center gap-4 text-sm text-slate-500 mb-6">
+      <div className="p-6 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-600 shrink-0">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">{vocabList.title}</h2>
+        <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mb-6">
           <span>共 {vocabList.words.length} 个单词</span>
           <span>•</span>
           <span>导入时间：{new Date(vocabList.createdAt).toLocaleDateString()}</span>
@@ -172,10 +172,10 @@ export default function VocabViewer({ vocabList, onExplainWord, onWordClick, onB
             placeholder="搜索单词、释义、同义词、短语..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-8 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors text-sm"
+            className="w-full pl-10 pr-8 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 focus:bg-white dark:bg-slate-800 dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors text-sm"
           />
           {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+            <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-300">
               <X className="w-4 h-4" />
             </button>
           )}

@@ -127,8 +127,8 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex items-center justify-between mb-2 shrink-0 gap-2">
         <div className="flex gap-1">
-          <button onClick={()=>setMode('write')} className={`text-xs px-2 py-1 rounded ${mode==='write'?'bg-blue-100 text-blue-700':'text-slate-500'}`}>✏️</button>
-          <button onClick={()=>setMode('draw')} className={`text-xs px-2 py-1 rounded ${mode==='draw'?'bg-blue-100 text-blue-700':'text-slate-500'}`}>🖊️</button>
+          <button onClick={()=>setMode('write')} className={`text-xs px-2 py-1 rounded ${mode==='write'?'bg-blue-100 text-blue-700':'text-slate-500 dark:text-slate-400'}`}>✏️</button>
+          <button onClick={()=>setMode('draw')} className={`text-xs px-2 py-1 rounded ${mode==='draw'?'bg-blue-100 text-blue-700':'text-slate-500 dark:text-slate-400'}`}>🖊️</button>
         </div>
         {mode==='draw' && (
           <div className="flex items-center gap-2">
@@ -139,11 +139,11 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
         )}
       </div>
       {mode==='write' ? (
-        <textarea className="flex-1 w-full p-4 border border-slate-200 dark:border-slate-600 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm leading-relaxed bg-white"
+        <textarea className="flex-1 w-full p-4 border border-slate-200 dark:border-slate-600 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm leading-relaxed bg-white dark:bg-slate-800"
           value={text} onChange={e=>{setText(e.target.value);onSave(e.target.value);}}
           placeholder="在此书写草稿、翻译、思路..." />
       ) : (
-        <div ref={containerRef} className="flex-1 border border-slate-200 dark:border-slate-600 rounded-xl bg-white overflow-hidden touch-none relative select-none" style={{WebkitUserSelect:'none',WebkitTouchCallout:'none'}}>
+        <div ref={containerRef} className="flex-1 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 overflow-hidden touch-none relative select-none" style={{WebkitUserSelect:'none',WebkitTouchCallout:'none'}}>
           <canvas ref={canvasRef}
             onPointerDown={startDraw} onPointerMove={draw} onPointerUp={stopDraw} onPointerLeave={stopDraw}
             className="block"
@@ -335,8 +335,8 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
           <div className="bg-blue-100 p-1.5 rounded-lg text-blue-600">
             <Sparkles className="w-5 h-5" />
           </div>
-          <span className="font-bold text-slate-800">AI Tutor</span>
-          <span className="ml-2 text-xs px-2 py-1 bg-slate-100 text-slate-500 rounded-full border border-slate-200 dark:border-slate-600 font-mono">
+          <span className="font-bold text-slate-800 dark:text-slate-100">AI Tutor</span>
+          <span className="ml-2 text-xs px-2 py-1 bg-slate-100 text-slate-500 dark:text-slate-400 rounded-full border border-slate-200 dark:border-slate-600 font-mono">
             {model}
           </span>
         </div>
@@ -380,15 +380,15 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] rounded-2xl px-5 py-4 ${
               msg.role === 'user'
-                ? msg.isAuto ? 'bg-blue-50 border border-blue-200 text-slate-700 rounded-br-sm'
+                ? msg.isAuto ? 'bg-blue-50 border border-blue-200 text-slate-700 dark:text-slate-200 rounded-br-sm'
                   : 'bg-blue-600 text-white rounded-br-sm shadow-md'
-                : 'bg-white border border-slate-200 dark:border-slate-600 text-slate-800 rounded-bl-sm shadow-sm'
+                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 rounded-bl-sm shadow-sm'
             }`}>
               {msg.role === 'assistant' ? (
                  <div className="space-y-4">
                     {msg.reasoning_content && (
-                      <div className="mb-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl p-4 text-sm text-slate-600 font-mono overflow-auto max-h-60 relative group">
-                         <div className="absolute top-2 right-2 flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 bg-white/80 px-2 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="mb-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-300 font-mono overflow-auto max-h-60 relative group">
+                         <div className="absolute top-2 right-2 flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 bg-white dark:bg-slate-800/80 px-2 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                              <Sparkles className="w-3 h-3 text-blue-500" /> Thinking
                          </div>
                          <div className="whitespace-pre-wrap leading-relaxed">{msg.reasoning_content}</div>
@@ -406,7 +406,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
                   className="flex items-center gap-2 text-xs w-full text-left group/expand"
                 >
                   <span className="text-blue-400 group-hover/expand:text-blue-600 transition-colors">📨</span>
-                  <span className="text-slate-500 truncate flex-1">{msg.summary}</span>
+                  <span className="text-slate-500 dark:text-slate-400 truncate flex-1">{msg.summary}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span className="text-[10px] text-blue-500 font-bold shrink-0">展开</span>
                 </button>
@@ -432,7 +432,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         )})}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:border-slate-600 rounded-2xl rounded-bl-sm px-6 py-4 shadow-sm text-slate-400 flex items-center gap-2">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-2xl rounded-bl-sm px-6 py-4 shadow-sm text-slate-400 flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
               <span className="text-sm">DeepSeek is thinking...</span>
             </div>
@@ -451,13 +451,13 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
           </button>
           <button
             onClick={() => handleSend("帮我总结一下四六级阅读中常见的长难句结构。")}
-            className="whitespace-nowrap px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg text-xs font-bold transition-colors"
+            className="whitespace-nowrap px-3 py-1.5 bg-slate-100 text-slate-600 dark:text-slate-300 hover:bg-slate-200 rounded-lg text-xs font-bold transition-colors"
           >
             📚 长难句总结
           </button>
           <button
             onClick={() => handleSend("列出这篇文本里出现的高频四六级词汇及它们的用法。")}
-            className="whitespace-nowrap px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg text-xs font-bold transition-colors"
+            className="whitespace-nowrap px-3 py-1.5 bg-slate-100 text-slate-600 dark:text-slate-300 hover:bg-slate-200 rounded-lg text-xs font-bold transition-colors"
           >
             🔥 提取本文高频词汇
           </button>
@@ -471,7 +471,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="有任何问题都可以问我..."
-              className="w-full bg-slate-100 border-transparent focus:bg-white dark:focus:bg-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 pr-12 resize-none h-[52px] min-h-[52px] max-h-32 text-sm transition-all focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400 scrollbar-hide flex items-center"
+              className="w-full bg-slate-100 border-transparent focus:bg-white dark:bg-slate-800 dark:focus:bg-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 pr-12 resize-none h-[52px] min-h-[52px] max-h-32 text-sm transition-all focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400 scrollbar-hide flex items-center"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();

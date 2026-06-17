@@ -124,26 +124,26 @@ export default function UploadExamModal({ isOpen, onClose, onUploadSuccess, apiK
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-      <div className="bg-white w-[480px] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-slate-800 w-[480px] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50">
-          <div className="flex items-center gap-2 text-slate-800 font-bold">
+          <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100 font-bold">
             <Upload className="w-5 h-5 text-blue-500" />
             导入历年真题
           </div>
-          <button onClick={handleClose} disabled={isUploading} className="p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors disabled:opacity-50">
+          <button onClick={handleClose} disabled={isUploading} className="p-1 text-slate-400 hover:text-slate-600 dark:text-slate-300 rounded-md transition-colors disabled:opacity-50">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-6 space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700">真题年份与名称</label>
+            <label className="text-sm font-bold text-slate-700 dark:text-slate-200">真题年份与名称</label>
             <input
               type="text"
               value={examYearTitle}
               onChange={(e) => setExamYearTitle(e.target.value)}
               disabled={isUploading}
-              className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-semibold text-slate-800 disabled:opacity-50"
+              className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-semibold text-slate-800 dark:text-slate-100 disabled:opacity-50"
             />
           </div>
 
@@ -178,8 +178,8 @@ export default function UploadExamModal({ isOpen, onClose, onUploadSuccess, apiK
             ) : (
                 <>
                   <Upload className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-                  <p className="font-bold text-slate-700 mb-1">点击选择文件上传</p>
-                  <p className="text-xs text-slate-500">支持 PDF、DOCX 或 TXT 格式</p>
+                  <p className="font-bold text-slate-700 dark:text-slate-200 mb-1">点击选择文件上传</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">支持 PDF、DOCX 或 TXT 格式</p>
                 </>
             )}
             <input
