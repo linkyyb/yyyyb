@@ -211,12 +211,12 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
   const displayDefinition = existingEntry?.definition || lookup?.definition || '';
 
   return (
-    <div ref={popupRef} style={popupStyle} className={`${showGrammarPanel ? 'w-[560px]' : 'w-[320px]'} max-h-[450px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150`}>
+    <div ref={popupRef} style={popupStyle} className={`${showGrammarPanel ? 'w-[560px]' : 'w-[320px]'} max-h-[450px] bg-[var(--th-bg-card)] border border-[var(--th-border)] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-100 dark:border-slate-700 shrink-0">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-[var(--th-border)] shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <div className="min-w-0 flex-1">
-            <span className="font-bold text-base text-slate-800 dark:text-slate-100">{word}</span>
+            <span className="font-bold text-base text-[var(--th-text)]">{word}</span>
             {phraseBase && phraseBase !== word && (
               <span className="text-xs text-slate-400 ml-1">← {phraseBase}</span>
             )}
@@ -228,7 +228,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
             </span>
           )}
         </div>
-        <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 dark:text-slate-300 rounded-md shrink-0"><X className="w-4 h-4" /></button>
+        <button onClick={onClose} className="p-1 text-slate-400 hover:text-[var(--th-text-soft)] rounded-md shrink-0"><X className="w-4 h-4" /></button>
       </div>
 
       {/* Body */}
@@ -236,7 +236,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
         <div className="space-y-3 min-w-0">
         {/* Phonetics */}
         {(phoneticUK || phoneticUS) && (
-          <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-3 text-xs text-[var(--th-text-soft)]">
             <Volume2 className="w-3.5 h-3.5 text-slate-400" />
             {phoneticUK && <span>{phoneticUK}</span>}
             {phoneticUS && <span>{phoneticUS}</span>}
@@ -247,7 +247,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
         {displayDefinition && (
           <div className="space-y-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1"><BookOpen className="w-3 h-3" /> 释义</p>
-            <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{displayDefinition}</p>
+            <p className="text-sm text-[var(--th-text)] leading-relaxed">{displayDefinition}</p>
           </div>
         )}
 
@@ -258,7 +258,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
             {defs.map((d, i) => (
               <div key={i} className="flex gap-2">
                 <span className="text-[11px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded shrink-0 min-w-[2rem] text-center">{d.pos}</span>
-                <span className="text-sm text-slate-700 dark:text-slate-200">{d.meaning}</span>
+                <span className="text-sm text-[var(--th-text)]">{d.meaning}</span>
               </div>
             ))}
           </div>
@@ -276,8 +276,8 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1"><Sparkles className="w-3 h-3 text-green-400" /> 词典例句</p>
             {examples.slice(0, 2).map((ex, i) => (
               <div key={i} className="bg-green-50/50 border border-green-100 rounded-lg p-2">
-                <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">{ex.en}</p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{ex.zh}</p>
+                <p className="text-xs text-[var(--th-text)] leading-relaxed">{ex.en}</p>
+                <p className="text-[10px] text-[var(--th-text-soft)] mt-0.5">{ex.zh}</p>
               </div>
             ))}
           </div>
@@ -288,8 +288,8 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
           <div className="space-y-1.5">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1"><Sparkles className="w-3 h-3 text-blue-400" /> AI 例句</p>
             {aiExamples.slice(0, 2).map((ex, i) => (
-              <div key={i} className="bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-700 rounded-lg p-2">
-                <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">{ex}</p>
+              <div key={i} className="bg-[var(--th-bg-soft)] border border-[var(--th-border)] rounded-lg p-2">
+                <p className="text-xs text-[var(--th-text)] leading-relaxed">{ex}</p>
               </div>
             ))}
           </div>
@@ -311,8 +311,8 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">短语搭配</p>
             {phrases.slice(0, 3).map((p, i) => (
               <div key={i} className="flex gap-2 text-xs">
-                <span className="font-bold text-slate-600 dark:text-slate-300 shrink-0">{p.phrase}</span>
-                <span className="text-slate-500 dark:text-slate-400">{p.meaning}</span>
+                <span className="font-bold text-[var(--th-text-soft)] shrink-0">{p.phrase}</span>
+                <span className="text-[var(--th-text-soft)]">{p.meaning}</span>
               </div>
             ))}
           </div>
@@ -344,14 +344,14 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
 
         {/* Sentence context */}
         {sentence && (
-          <p className="text-[10px] text-slate-400 italic border-t border-slate-100 dark:border-slate-700 pt-2">
+          <p className="text-[10px] text-slate-400 italic border-t border-[var(--th-border)] pt-2">
             原文：...{sentence.substring(0, 80)}{sentence.length > 80 ? '...' : ''}
           </p>
         )}
         </div>
 
         {showGrammarPanel && (
-          <aside className="border-l border-slate-100 dark:border-slate-700 pl-4 space-y-2 min-w-0">
+          <aside className="border-l border-[var(--th-border)] pl-4 space-y-2 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">词形语法</p>
               {grammarLoading && <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin" />}
@@ -361,21 +361,21 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
               <div className="space-y-2">
                 <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-2">
                   <p className="text-[10px] text-indigo-400 font-bold mb-1">当前词形</p>
-                  <p className="text-xs text-slate-700 dark:text-slate-200">
+                  <p className="text-xs text-[var(--th-text)]">
                     <span className="font-bold">{grammar.surfaceForm || word}</span>
                     {grammar.baseForm && grammar.baseForm !== (grammar.surfaceForm || word) && <span className="text-slate-400"> ← {grammar.baseForm}</span>}
                   </p>
                 </div>
-                {grammar.partOfSpeech && <p className="text-xs text-slate-600 dark:text-slate-300"><span className="font-bold text-slate-500 dark:text-slate-400">词性：</span>{grammar.partOfSpeech}</p>}
-                {grammar.sentenceRole && <p className="text-xs text-slate-600 dark:text-slate-300"><span className="font-bold text-slate-500 dark:text-slate-400">句中成分：</span>{grammar.sentenceRole}</p>}
-                {grammar.morphology && <p className="text-xs text-slate-600 dark:text-slate-300"><span className="font-bold text-slate-500 dark:text-slate-400">形态：</span>{grammar.morphology}</p>}
+                {grammar.partOfSpeech && <p className="text-xs text-[var(--th-text-soft)]"><span className="font-bold text-[var(--th-text-soft)]">词性：</span>{grammar.partOfSpeech}</p>}
+                {grammar.sentenceRole && <p className="text-xs text-[var(--th-text-soft)]"><span className="font-bold text-[var(--th-text-soft)]">句中成分：</span>{grammar.sentenceRole}</p>}
+                {grammar.morphology && <p className="text-xs text-[var(--th-text-soft)]"><span className="font-bold text-[var(--th-text-soft)]">形态：</span>{grammar.morphology}</p>}
                 {grammar.grammarReason && (
-                  <div className="rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-700 p-2">
+                  <div className="rounded-lg bg-[var(--th-bg-soft)] border border-[var(--th-border)] p-2">
                     <p className="text-[10px] text-slate-400 font-bold mb-1">为什么用这个词形</p>
-                    <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">{grammar.grammarReason}</p>
+                    <p className="text-xs text-[var(--th-text)] leading-relaxed">{grammar.grammarReason}</p>
                   </div>
                 )}
-                {grammar.structure && <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{grammar.structure}</p>}
+                {grammar.structure && <p className="text-xs text-[var(--th-text-soft)] leading-relaxed">{grammar.structure}</p>}
                 {grammar.replacementWarning && (
                   <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-2 leading-relaxed">{grammar.replacementWarning}</p>
                 )}
@@ -387,7 +387,7 @@ export default function WordPopup({ word, sentence, x, y, vocabLists, apiKey, wo
       </div>
 
       {/* Actions */}
-      <div className="flex border-t border-slate-100 dark:border-slate-700 shrink-0">
+      <div className="flex border-t border-[var(--th-border)] shrink-0">
         <button onClick={() => { onAddToVocab(word, displayDefinition, sentence, lookup || (existingEntry as any) || undefined); onClose(); }}
           className="flex-1 py-2.5 text-xs font-bold text-green-600 hover:bg-green-50 transition-colors flex items-center justify-center gap-1.5 border-r border-slate-100">
           <BookmarkPlus className="w-3.5 h-3.5" />{existingEntry ? '已收藏 ✓' : '加入词汇本'}

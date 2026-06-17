@@ -1,6 +1,47 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, [data-theme="sepia"], [data-theme="sepia"] *, [data-theme="green"], [data-theme="green"] *));
+
+/* Light theme (default) */
+:root {
+  --th-bg: #f8fafc;
+  --th-bg-card: #ffffff;
+  --th-bg-soft: #f1f5f9;
+  --th-text: #0f172a;
+  --th-text-soft: #64748b;
+  --th-border: #e2e8f0;
+  --th-accent: #2563eb;
+}
+
+[data-theme="dark"] {
+  --th-bg: #0f172a;
+  --th-bg-card: #1e293b;
+  --th-bg-soft: #334155;
+  --th-text: #f1f5f9;
+  --th-text-soft: #94a3b8;
+  --th-border: #334155;
+  --th-accent: #60a5fa;
+}
+
+[data-theme="sepia"] {
+  --th-bg: #f4ecd8;
+  --th-bg-card: #faf3e0;
+  --th-bg-soft: #ebe0c4;
+  --th-text: #5b4636;
+  --th-text-soft: #8b7355;
+  --th-border: #d9c9a8;
+  --th-accent: #b8860b;
+}
+
+[data-theme="green"] {
+  --th-bg: #0d1f1a;
+  --th-bg-card: #142823;
+  --th-bg-soft: #1e3a32;
+  --th-text: #d1e8df;
+  --th-text-soft: #8aa89a;
+  --th-border: #2d4a40;
+  --th-accent: #34d399;
+}
 
 @layer components {
   .markdown-body {
