@@ -84,7 +84,7 @@ export default function GlobalProgressIndicator() {
                  }`}>
                     <button
                       onClick={() => taskManager.removeTask(task.id)}
-                      className="absolute top-2 right-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 text-[var(--th-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <X className="w-3 h-3" />
                     </button>

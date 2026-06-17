@@ -127,7 +127,7 @@ export default function AppSidebar({
                       {custom && (
                         <button
                           onClick={(e) => { e.stopPropagation(); onDeleteExam(exam.id); }}
-                          className="p-1 text-slate-300 hover:text-red-500 rounded transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1 text-[var(--th-text-muted)] hover:text-red-500 rounded transition-colors opacity-0 group-hover:opacity-100"
                           title="删除此试卷"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -196,7 +196,7 @@ export default function AppSidebar({
                     {selectedVocabId === list.id && <div className="w-2 h-2 rounded-full bg-green-500 shrink-0 mt-1.5"></div>}
                   </div>
                   <span className="text-[10px] text-[var(--th-text-soft)] flex items-center gap-1"><FileText className="w-3 h-3" />{list.words.length} 个单词</span>
-                  <button onClick={(e) => { e.stopPropagation(); onDeleteVocab(list.id); }} className={`absolute top-2 right-2 text-slate-300 hover:text-red-500 transition-opacity ${selectedVocabId === list.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                  <button onClick={(e) => { e.stopPropagation(); onDeleteVocab(list.id); }} className={`absolute top-2 right-2 text-[var(--th-text-muted)] hover:text-red-500 transition-opacity ${selectedVocabId === list.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                     <X className="w-4 h-4" />
                   </button>
                 </button>
@@ -215,7 +215,7 @@ export default function AppSidebar({
                 <div key={bm.id} className="bg-[var(--th-bg-card)] border border-slate-200 hover:border-purple-300 rounded-lg p-3 transition-colors group cursor-pointer shadow-sm" onClick={() => onReviewBookmark(bm)}>
                   <div className="flex justify-between items-start mb-1">
                     <span className="text-[10px] font-bold text-purple-600 uppercase bg-purple-50 px-1.5 py-0.5 rounded">{bm.type}</span>
-                    <button onClick={(e) => { e.stopPropagation(); onDeleteBookmark(bm.id); }} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); onDeleteBookmark(bm.id); }} className="text-[var(--th-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
                   </div>
                   <p className="text-[13px] line-clamp-3 text-[var(--th-text)] leading-relaxed font-medium">{bm.content}</p>
                 </div>

@@ -329,26 +329,26 @@ export default function App() {
           <div className="sticky top-0 z-40 flex items-center gap-3 px-4 py-2 backdrop-blur border-b border-b-slate-100 dark:border-b-slate-700 bg-[var(--th-bg-card)]/90 dark:bg-slate-800/90">
             <button
               onClick={() => setSidebarVisible(!sidebarVisible)}
-              className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-[var(--th-text-soft)]"
+              className="p-1.5 rounded-lg hover:bg-[var(--th-hover)] transition-colors text-[var(--th-text-muted)] hover:text-[var(--th-text)]"
               title={sidebarVisible ? '隐藏侧边栏' : '显示侧边栏'}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
             </button>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">字号</span>
+            <span className="text-[10px] text-[var(--th-text-muted)] font-bold uppercase tracking-wider">字号</span>
             <input
               type="range" min="12" max="24" step="1" value={fontSize}
               onChange={(e) => { const v=parseInt(e.target.value); setFontSize(v); localStorage.setItem('cet_font_size', String(v)); }}
               className="w-20 h-1 accent-blue-500"
             />
-            <span className="text-[10px] text-slate-400 w-8">{fontSize}px</span>
-            <span className="text-slate-300">|</span>
-            <select value={theme} onChange={(e) => setTheme(e.target.value)} className="text-[10px] px-1 py-0.5 rounded border-0 bg-transparent text-slate-500 cursor-pointer outline-none" title="切换主题">
+            <span className="text-[10px] text-[var(--th-text-muted)] w-8">{fontSize}px</span>
+            <span className="text-[var(--th-text-muted)]">|</span>
+            <select value={theme} onChange={(e) => setTheme(e.target.value)} className="text-[10px] px-1 py-0.5 rounded border-0 bg-transparent text-[var(--th-text-soft)] cursor-pointer outline-none" title="切换主题">
               <option value="light">☀️ 日间</option>
               <option value="dark">🌙 夜间</option>
               <option value="sepia">📜 护眼黄</option>
               <option value="green">🌲 护眼绿</option>
             </select>
-            <span className="text-slate-300">|</span>
+            <span className="text-[var(--th-text-muted)]">|</span>
             <button
               onClick={() => {
                 const next = !phraseMode;
@@ -366,7 +366,7 @@ export default function App() {
                   else setScanningPhrases(false);
                 } else { setPhraseHighlights([]); }
               }}
-              className={`px-2 py-1 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${phraseMode ? 'bg-yellow-200 text-yellow-800' : 'text-slate-400 hover:text-[var(--th-text-soft)]'}`}
+              className={`px-2 py-1 rounded text-[10px] font-bold transition-colors flex items-center gap-1 ${phraseMode ? 'bg-yellow-200 text-yellow-800' : 'text-[var(--th-text-muted)] hover:text-[var(--th-text)]'}`}
               title="切换短语/单词模式"
             >{scanningPhrases ? <span className="inline-block w-3 h-3 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></span> : null}{phraseMode ? '✏️ 短语' : '🔤 单词'}</button>
             {phraseMode && (
@@ -378,10 +378,10 @@ export default function App() {
                   .then(r=>r.json()).then(d=>{
                     if(d.phrases){ setPhraseHighlights(d.phrases); localStorage.setItem('cet6_phrase_scan_'+selectedPassage.id,JSON.stringify(d.phrases)); }
                   }).catch(()=>{}).finally(()=>setScanningPhrases(false));
-              }} className="px-1.5 py-1 rounded text-[10px] text-slate-400 hover:text-[var(--th-text-soft)] hover:bg-slate-100 transition-colors"
+              }} className="px-1.5 py-1 rounded text-[10px] text-[var(--th-text-muted)] hover:text-[var(--th-text)] hover:bg-[var(--th-hover)] transition-colors"
                 title="重新扫描短语">🔄</button>
             )}
-            <span className="text-slate-300">|</span>
+            <span className="text-[var(--th-text-muted)]">|</span>
             <div className="relative"><ExamTimer /></div>
           </div>
           {activeTab === 'exams' && selectedPassage ? (

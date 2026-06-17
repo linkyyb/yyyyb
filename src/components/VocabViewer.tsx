@@ -44,14 +44,14 @@ function WordCard({ item, onExplainWord, onWordClick, onBookmark, listTitle }: {
           <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={(e) => { e.stopPropagation(); onBookmark('word', item.word, `来源词表: ${listTitle}`); }}
-              className="text-slate-300 hover:text-purple-500 p-1 rounded transition-colors"
+              className="text-[var(--th-text-muted)] hover:text-purple-500 p-1 rounded transition-colors"
               title="收藏单词"
             >
               <BookmarkPlus className="w-4 h-4" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onExplainWord(item.word); }}
-              className="text-slate-300 hover:text-blue-500 p-1 rounded transition-colors"
+              className="text-[var(--th-text-muted)] hover:text-blue-500 p-1 rounded transition-colors"
               title="AI 深度解析"
             >
               <Sparkles className="w-4 h-4" />

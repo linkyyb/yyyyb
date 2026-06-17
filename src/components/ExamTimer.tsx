@@ -57,8 +57,8 @@ export default function ExamTimer({ onTick }: TimerProps) {
           <button onClick={() => setShowSettings(!showSettings)} className="p-0.5 text-slate-400"><Settings className="w-3 h-3" /></button>
           {showSettings && (
             <div className="absolute top-full right-0 mt-1 p-2 bg-[var(--th-bg-card)] border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 flex flex-col gap-2">
-              <button onClick={() => { reset(); setMode('countup'); }} className={"text-xs px-2 py-1 rounded " + (mode === 'countup' ? 'bg-blue-100 text-blue-700' : 'text-[var(--th-text-soft)] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700')}>正计时</button>
-              <button onClick={() => { reset(); setMode('countdown'); }} className={"text-xs px-2 py-1 rounded " + (mode === 'countdown' ? 'bg-blue-100 text-blue-700' : 'text-[var(--th-text-soft)] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700')}>倒计时</button>
+              <button onClick={() => { reset(); setMode('countup'); }} className={"text-xs px-2 py-1 rounded " + (mode === 'countup' ? 'bg-[var(--th-bg-soft)] text-[var(--th-accent)]' : 'text-[var(--th-text-soft)] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700')}>正计时</button>
+              <button onClick={() => { reset(); setMode('countdown'); }} className={"text-xs px-2 py-1 rounded " + (mode === 'countdown' ? 'bg-[var(--th-bg-soft)] text-[var(--th-accent)]' : 'text-[var(--th-text-soft)] dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700')}>倒计时</button>
               <button onClick={() => { reset(); setMode('off'); }} className="text-xs px-2 py-1 text-red-400 hover:bg-red-50 rounded">关闭</button>
               {mode === 'countdown' && (
                 <div className="flex items-center gap-1 text-xs">

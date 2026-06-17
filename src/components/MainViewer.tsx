@@ -145,7 +145,7 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
           onClick={(e) => { e.stopPropagation(); onBookmark('sentence', text, passageTitle); }}
           onTouchStart={(e) => { const el=e.currentTarget as HTMLElement; el.dataset.tsx=String(e.touches[0].clientX); el.dataset.tsy=String(e.touches[0].clientY); el.dataset.tst=String(Date.now()); }}
           onTouchEnd={(e) => { const el=e.currentTarget as HTMLElement; const sx=parseFloat(el.dataset.tsx||'0'),sy=parseFloat(el.dataset.tsy||'0'),st=parseFloat(el.dataset.tst||'0'); delete el.dataset.tsx; delete el.dataset.tsy; delete el.dataset.tst; if(sx&&st){const dx=Math.abs(e.changedTouches[0].clientX-sx),dy=Math.abs(e.changedTouches[0].clientY-sy);if(dx<5&&dy<5&&Date.now()-st<200){e.preventDefault();e.stopPropagation();onBookmark('sentence',text,passageTitle);}} }}
-          className="p-1.5 rounded-lg hover:bg-purple-100 active:bg-purple-200 text-slate-300 hover:text-purple-500 transition-colors min-w-[32px] min-h-[32px] touch-manipulation"
+          className="p-1.5 rounded-lg hover:bg-purple-100 active:bg-purple-200 text-[var(--th-text-muted)] hover:text-purple-500 transition-colors min-w-[32px] min-h-[32px] touch-manipulation"
           title="收藏此句"
         >
           <BookmarkPlus className="w-3.5 h-3.5" />
@@ -347,7 +347,7 @@ export default function MainViewer({ passage, onSentenceClick, onQuestionClick, 
       }`}>
         <button
           onClick={() => onBookmark('question', q.content, passage.title)}
-          className="absolute top-3 right-3 text-slate-300 hover:text-blue-500 p-1.5 rounded-lg hover:bg-blue-50 opacity-0 group-hover:opacity-100 transition-all"
+          className="absolute top-3 right-3 text-[var(--th-text-muted)] hover:text-blue-500 p-1.5 rounded-lg hover:bg-blue-50 opacity-0 group-hover:opacity-100 transition-all"
         >
           <BookmarkPlus className="w-4 h-4" />
         </button>

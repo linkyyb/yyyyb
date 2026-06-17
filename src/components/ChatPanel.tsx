@@ -348,7 +348,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
           >📝 笔记</button>
           {!showNotes && <button
             onClick={handleClearHistory}
-            className="text-[10px] uppercase font-bold text-slate-400 hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-red-50"
+            className="text-[10px] uppercase font-bold text-[var(--th-text-muted)] hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-red-50"
             title="清空记录"
           >清空</button>}
           <button
