@@ -327,7 +327,7 @@ export default function App() {
         {/* Left: Reading Area */}
         <div className={`${sidebarVisible ? 'w-1/2' : 'flex-[3]'} h-full overflow-y-auto border-r border-[var(--th-border)] bg-[var(--th-bg-card)] transition-all`} style={{fontSize: fontSize+'px'}}>
           {/* Inline toolbar — blends with reading header */}
-          <div className="sticky top-0 z-40 flex items-center gap-3 px-4 py-2 backdrop-blur border-b border-b-slate-100 dark:border-b-slate-700 bg-[var(--th-bg-card)]/90 dark:bg-slate-800/90">
+          <div className="sticky top-0 z-40 flex items-center gap-3 px-4 py-2 backdrop-blur border-b border-b-slate-100  bg-[var(--th-bg-card)]/90 ">
             <button
               onClick={() => setSidebarVisible(!sidebarVisible)}
               className="p-1.5 rounded-lg hover:bg-[var(--th-hover)] transition-colors text-[var(--th-text-muted)] hover:text-[var(--th-text)]"
@@ -348,6 +348,7 @@ export default function App() {
               <option value="dark">🌙 夜间</option>
               <option value="sepia">📜 护眼黄</option>
               <option value="green">🌲 护眼绿</option>
+              <option value="ocean">🌊 深海蓝</option>
             </select>
             <span className="text-[var(--th-text-muted)]">|</span>
             <button

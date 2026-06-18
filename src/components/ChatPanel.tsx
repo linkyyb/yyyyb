@@ -127,8 +127,8 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex items-center justify-between mb-2 shrink-0 gap-2">
         <div className="flex gap-1">
-          <button onClick={()=>setMode('write')} className={`text-xs px-2 py-1 rounded ${mode==='write'?'bg-blue-100 text-blue-700':'text-[var(--th-text-soft)]'}`}>✏️</button>
-          <button onClick={()=>setMode('draw')} className={`text-xs px-2 py-1 rounded ${mode==='draw'?'bg-blue-100 text-blue-700':'text-[var(--th-text-soft)]'}`}>🖊️</button>
+          <button onClick={()=>setMode('write')} className={`text-xs px-2 py-1 rounded ${mode==='write'?'bg-[var(--th-accent-soft)] text-[var(--th-accent)]':'text-[var(--th-text-soft)]'}`}>✏️</button>
+          <button onClick={()=>setMode('draw')} className={`text-xs px-2 py-1 rounded ${mode==='draw'?'bg-[var(--th-accent-soft)] text-[var(--th-accent)]':'text-[var(--th-text-soft)]'}`}>🖊️</button>
         </div>
         {mode==='draw' && (
           <div className="flex items-center gap-2">
@@ -432,7 +432,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         )})}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-[var(--th-bg-card)] border border-[var(--th-border)] rounded-2xl rounded-bl-sm px-6 py-4 shadow-sm text-slate-400 flex items-center gap-2">
+            <div className="bg-[var(--th-bg-card)] border border-[var(--th-border)] rounded-2xl rounded-bl-sm px-6 py-4 shadow-sm text-[var(--th-text-muted)] flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
               <span className="text-sm">DeepSeek is thinking...</span>
             </div>
@@ -445,7 +445,7 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         <div className="max-w-4xl mx-auto mb-3 flex gap-2 overflow-x-auto scrollbar-hide px-1">
           <button
             onClick={() => handleSend("请根据我刚才的提问历史，评估我的英语语法水平，并为我出两道针对性的四六级练习题。")}
-            className="whitespace-nowrap px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors"
+            className="whitespace-nowrap px-3 py-1.5 bg-[var(--th-accent-soft)] text-[var(--th-accent)] hover:bg-[var(--th-hover)] rounded-lg text-xs font-bold transition-colors"
           >
             🎯 针对性出题测试
           </button>
