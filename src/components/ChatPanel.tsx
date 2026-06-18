@@ -380,8 +380,8 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] rounded-2xl px-5 py-4 ${
               msg.role === 'user'
-                ? msg.isAuto ? 'bg-blue-50 border border-blue-200 text-[var(--th-text)] rounded-br-sm'
-                  : 'bg-blue-600 text-white rounded-br-sm shadow-md'
+                ? msg.isAuto ? 'bg-[var(--th-accent-soft)] border border-[var(--th-border)] text-[var(--th-text)] rounded-br-sm'
+                  : 'bg-[var(--th-accent)] text-white rounded-br-sm shadow-md'
                 : 'bg-[var(--th-bg-card)] border border-[var(--th-border)] text-[var(--th-text)] rounded-bl-sm shadow-sm'
             }`}>
               {msg.role === 'assistant' ? (
@@ -444,20 +444,20 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
       <div className="p-4 bg-[var(--bg-card)] border-t border-[var(--border)] shrink-0">
         <div className="max-w-4xl mx-auto mb-3 flex gap-2 overflow-x-auto scrollbar-hide px-1">
           <button
-            onClick={() => handleSend("请根据我刚才的提问历史，评估我的英语语法水平，并为我出两道针对性的四六级练习题。")}
-            className="whitespace-nowrap px-3 py-1.5 bg-[var(--th-accent-soft)] text-[var(--th-accent)] hover:bg-[var(--th-hover)] rounded-lg text-xs font-bold transition-colors"
+            onClick={() => handleSend("请根据我刚才的提问历史，评估我的英语语法水平，并为我出两道针对性的练习题。")}
+            className="whitespace-nowrap px-3 py-1.5 bg-[var(--th-bg-soft)] text-[var(--th-text-soft)] hover:bg-[var(--th-hover)] rounded-lg text-xs font-bold transition-colors"
           >
             🎯 针对性出题测试
           </button>
           <button
-            onClick={() => handleSend("帮我总结一下四六级阅读中常见的长难句结构。")}
-            className="whitespace-nowrap px-3 py-1.5 bg-[var(--th-bg-soft)] text-[var(--th-text-soft)] hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-colors"
+            onClick={() => handleSend("帮我总结一下英语阅读中常见的长难句结构。")}
+            className="whitespace-nowrap px-3 py-1.5 bg-[var(--th-bg-soft)] text-[var(--th-text-soft)] hover:bg-[var(--th-hover)] rounded-lg text-xs font-bold transition-colors"
           >
             📚 长难句总结
           </button>
           <button
-            onClick={() => handleSend("列出这篇文本里出现的高频四六级词汇及它们的用法。")}
-            className="whitespace-nowrap px-3 py-1.5 bg-[var(--th-bg-soft)] text-[var(--th-text-soft)] hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold transition-colors"
+            onClick={() => handleSend("列出这篇文本里出现的高频核心词汇及它们的用法。")}
+            className="whitespace-nowrap px-3 py-1.5 bg-[var(--th-bg-soft)] text-[var(--th-text-soft)] hover:bg-[var(--th-hover)] rounded-lg text-xs font-bold transition-colors"
           >
             🔥 提取本文高频词汇
           </button>
