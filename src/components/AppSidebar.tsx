@@ -64,7 +64,7 @@ export default function AppSidebar({
             <div className="w-4 h-4 border-2 border-white rotate-45"></div>
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-tight text-[var(--th-text)] tracking-tight">四六级精读导师</h1>
+            <h1 className="font-bold text-lg leading-tight text-[var(--th-text)] tracking-tight">英语精读导师</h1>
             <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">基于 DeepSeek AI</p>
           </div>
         </div>

@@ -217,7 +217,7 @@ async function startServer() {
       const {phrase,sentence,definition,category,apiKey}=req.body;
       if(!apiKey||!phrase) return res.status(400).json({error:"API Key required"});
       const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
-      const prompt=`Explain an English phrase for CET-4/CET-6 intensive reading. Output ONLY JSON:
+      const prompt=`Explain an English phrase for intensive reading. Output ONLY JSON:
 {"phrase":"base phrase","definition":"Chinese meaning and usage summary","category":"verb_phrase/preposition_collocation/fixed_noun_phrase/pure_prepositional_phrase","definitions":[{"pos":"category","meaning":"usage point in Chinese"}],"examples":["English example —— Chinese translation","English example —— Chinese translation"],"synonyms":["near expression"],"phrases":[{"phrase":"related phrase","meaning":"Chinese meaning"}],"mnemonic":"short memory note"}.
 Requirements:
 - Explain the whole phrase, not individual words.

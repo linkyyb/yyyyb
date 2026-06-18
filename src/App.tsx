@@ -205,7 +205,7 @@ export default function App() {
   // ── Explain: Sentence ──
   const explainSentence = useCallback((sentence: string, customContext?: string) => {
     const ctx = customContext || selectedPassage?.paragraphs.map((p) => p.sentences.join(' ')).join('\n') || '';
-    setSystemContext(`你是英语四六级精读辅导老师。请用中文详细讲解下面的句子。内容包括：核心语法结构分析、高频四六级词汇解释、生僻词提取。上下文如下：\n${ctx}`);
+    setSystemContext(`你是英语精读辅导老师。请用中文详细讲解下面的句子。内容包括：核心语法结构分析、高频核心词汇解释、生僻词提取。上下文如下：\n${ctx}`);
     setAutoSendPrompt(`请详细讲解这句话的语法结构、高频考点词和生僻词：\n"${sentence}"`);
   }, [selectedPassage]);
 
@@ -218,11 +218,11 @@ export default function App() {
       return updated;
     });
 
-    setSystemContext(`你是英语四六级词汇专家。用户将给你一个单词。你需要提供详细解析：1. 音标与中文意思。2. 同根派生词。3. 四六级常考短语搭配。4. 历年试卷出现权重。5. 结合例句翻译和用法讲解。`);
+    setSystemContext(`你是英语词汇专家。用户将给你一个单词。你需要提供详细解析：1. 音标与中文意思。2. 同根派生词。3. 常考短语搭配。4. 历年考试出现权重。5. 结合例句翻译和用法讲解。`);
     if (sentence) {
       setAutoSendPrompt(`请详细解析单词 "${word}"。结合它在此句中的用法给予中文讲解：\n"${sentence}"`);
     } else {
-      setAutoSendPrompt(`请给出单词 "${word}" 的完整四六级解析：包括派生词、短语搭配、词汇变形、历年考点，并给出2个四六级难度例句。`);
+      setAutoSendPrompt(`请给出单词 "${word}" 的完整解析：包括派生词、短语搭配、词汇变形、历年考点，并给出2个中高难度例句。`);
     }
   }, []);
 
@@ -263,7 +263,7 @@ export default function App() {
         sectionPrompt = '请详细解析这道题的正确答案及解题思路。';
     }
 
-    setSystemContext(`你是英语四六级提分专家。${sectionPrompt}\n全文内容：\n${ctx}`);
+    setSystemContext(`你是英语提分专家。${sectionPrompt}\n全文内容：\n${ctx}`);
     const prompt = answer
       ? `请结合全文，详细讲解这道题的正确答案及解题思路（原答案为 ${answer}，提示：${explanation}）：\n题目：${questionContent}\n选项：\n${options}`
       : `请结合全文，解答这道题并给出详细解析：\n题目：${questionContent}\n选项：\n${options}`;
@@ -294,7 +294,7 @@ export default function App() {
     } else if (bm.type === 'word') {
       handleDeepAskWord(bm.content, bm.context || '');
     } else {
-      setSystemContext(`你需要扮演英语四六级专家。请为我详细解析这道阅读理解题。上下文：${bm.context || ''}`);
+      setSystemContext(`你需要扮演英语专家。请为我详细解析这道阅读理解题。上下文：${bm.context || ''}`);
       setAutoSendPrompt(`请带我复习这道题，并给出详细解析：\n${bm.content}`);
     }
   };

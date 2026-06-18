@@ -1,11 +1,11 @@
-// parsers/reading.ts — Pure reading mode (no questions, just segmentation)
-import { SectionExtract, ExamParser, segmentParagraphs } from './base';
+// parsers/reading.ts — Pure reading mode (AI-assisted segmentation, no questions)
+import { SectionExtract, ExamParser } from './base';
 
 export const ReadingParser: ExamParser = {
   examType: 'reading',
 
   extractSections(text: string): SectionExtract[] {
-    // Pure reading: treat entire text as one passage, no question extraction
+    // Treat entire text as one passage
     return [{
       type: 'reading',
       title: '精读文章',
@@ -14,8 +14,13 @@ export const ReadingParser: ExamParser = {
   },
 
   buildPrompt(s: SectionExtract): string {
-    // No AI prompt needed for pure reading — segmentation is done client-side
-    // But if called, just split into paragraphs
-    return `Split this text into paragraphs and sentences. Output JSON: {"title":"精读文章","section":"reading","paragraphs":[{"id":"p1","sentences":["s1.","s2."]}],"questions":[]}`;
+    return `You are a text segmentation assistant. Split this English article into properly formatted paragraphs and sentences. Rules:
+1. Identify natural paragraph boundaries (topic shifts, blank lines, indentation)
+2. Split each paragraph into individual sentences at sentence-ending punctuation (. ! ?)
+3. Merge lines that were broken mid-sentence by PDF formatting
+4. Do NOT extract any questions — this is pure reading mode
+5. Preserve ALL original text content
+Output ONLY JSON: {"title":"精读文章","section":"reading","paragraphs":[{"id":"p1","sentences":["First sentence.","Second sentence."]}],"questions":[]}`;
   },
 };
+

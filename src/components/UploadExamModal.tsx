@@ -24,8 +24,9 @@ export default function UploadExamModal({ isOpen, onClose, onUploadSuccess, apiK
   if (!isOpen) return null;
 
   const handleUpload = async () => {
-    // Reading mode can use paste text without file/API key
+    // Reading mode: extract text + AI segmentation via TaskStore
     if (examType === 'reading') {
+      if (!apiKey) { setError('精读模式需要 API Key 进行 AI 段落拆分'); return; }
       let text = '';
       if (pasteMode && pasteText.trim()) {
         text = pasteText;
@@ -42,17 +43,26 @@ export default function UploadExamModal({ isOpen, onClose, onUploadSuccess, apiK
         return;
       }
       if (!text.trim()) { setError('文本为空'); return; }
-      // Reading mode: call /api/parse-reading (no AI needed)
-      const rRes = await fetch('/api/parse-reading', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
-      const rData = await rRes.json();
-      if (rData.passages?.length) {
-        const newExam: ExamPaper = {
-          id: `reading-${Date.now()}`, examType: 'reading',
-          year: new Date().toLocaleDateString(), title: file?.name.replace(/\.[^/.]+$/, '') || '精读文章',
-          passages: rData.passages as Passage[],
-        };
-        onUploadSuccess(newExam);
-      }
+
+      setIsUploading(true);
+      setUploadStage('parsing');
+      const finalTitle = file?.name.replace(/\.[^/.]+$/, '') || '精读文章';
+      taskManager.startTask(
+        'exam', finalTitle, text, apiKey,
+        localStorage.getItem('deepseek_model') || 'deepseek-v4-pro',
+        localStorage.getItem('deepseek_thinking') !== 'false',
+        (result) => {
+          if (result?.passages?.length) {
+            const newExam: ExamPaper = {
+              id: `reading-${Date.now()}`, examType: 'reading',
+              year: new Date().toLocaleDateString(), title: finalTitle,
+              passages: result.passages as Passage[],
+            };
+            onUploadSuccess(newExam);
+          }
+        },
+        'reading'
+      );
       setIsUploading(false); setUploadStage('idle'); setFile(null); setPasteText(''); onClose();
       return;
     }
