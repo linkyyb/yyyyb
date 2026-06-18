@@ -3,139 +3,31 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import OpenAI from "openai";
 import multer from "multer";
+import { cleanText, segmentParagraphs, SectionExtract, ExamParser } from "./parsers/base";
+import { CETParser } from "./parsers/cet";
+import { IELTSParser } from "./parsers/ielts";
+import { TOEFLParser } from "./parsers/toefl";
+import { KaoyanParser } from "./parsers/kaoyan";
+import { ReadingParser } from "./parsers/reading";
 
-// ═══ Text Cleaner ═══
-function cleanPdfText(raw: string): string {
-  let t = raw;
-  t = t.replace(/\t/g, ' ');
-  t = t.replace(/[ ]{2,}/g, ' ');
-  t = t.replace(/Ⅰ/g,'I').replace(/Ⅱ/g,'II').replace(/Ⅲ/g,'III').replace(/Ⅳ/g,'IV');
-  t = t.replace(/([一-鿿㐀-䶿])\s+([一-鿿㐀-䶿])/g,'$1$2');
-  t = t.replace(/([一-鿿])\s+([，。！？；：、（）《》【】])/g,'$1$2');
-  let p=''; while(p!==t){p=t;t=t.replace(/(\d)\s+(\d)/g,'$1$2');}
-  t = t.replace(/([a-zA-Z])\s+([,.!?;:])/g,'$1$2');
-  t = t.replace(/Directions:([A-Z])/g,'Directions: $1');
-  t = t.replace(/([a-z]):([A-Z])/g,'$1: $2');
-  t = t.replace(/\n{3,}/g,'\n\n');
-  t = t.replace(/·\s*\d{4}年\d{1,2}月[^·\n]*·\s*/g,'\n');
-  t = t.replace(/\d+\s*·\s*\d{4}年\d{1,2}月[^\n]*/g,'');
-  t = t.replace(/pastpapers\.cn\s*/g,'');
-  t = t.replace(/--\s*\d+\s+of\s+\d+\s*--/g,'');
-  return t.trim();
+// Parser registry — strategy pattern
+const PARSERS: Record<string, ExamParser> = {
+  cet4: CETParser, cet6: CETParser,
+  ielts: IELTSParser, toefl: TOEFLParser, kaoyan: KaoyanParser,
+  reading: ReadingParser,
+};
+
+function getParser(examType: string): ExamParser {
+  return PARSERS[examType] || CETParser;
 }
 
-// ═══ Sentence Segmenter ═══
-function segmentSentences(c: string): string {
-  let l=c.split('\n'),m:string[]=[];
-  for(let i=0;i<l.length;i++){
-    let ln=l[i].trim();if(!ln){m.push('');continue}
-    if(m.length>0&&m[m.length-1]!==''){
-      let pv=m[m.length-1],pe=pv.slice(-1),cs=ln.charAt(0);
-      if(!'.!?'.includes(pe)||(cs===cs.toLowerCase()&&/[a-z]/.test(cs))){m[m.length-1]=pv+' '+ln;continue}
-    }
-    m.push(ln);
-  }
-  let t=m.join('\n'),ps=t.split(/\n\n+/),r:string[]=[];
-  for(let pa of ps){let tr=pa.trim();if(!tr){r.push('');continue}
-    let ss=tr.replace(/([.!?])\s+(?=[A-Z"'(])/g,'$1\n').split('\n').map(s=>s.trim()).filter(s=>s.length>0);
-    r.push(...ss,'');
-  }
-  return r.join('\n').replace(/\n{3,}/g,'\n\n').trim();
-}
-
-// ═══ Section Extraction ═══
-interface SectionExtract { type: string; title: string; text: string; wordBank?: string[]; sourceText?: string; }
-
-function extractSections(t: string): SectionExtract[] {
-  const S: SectionExtract[] = [];
-
-  // Boundaries
-  const readingIdx = t.search(/Reading\s*Comprehension/i);
-  const listeningIdx = t.search(/Listening\s*Comprehension/i);
-  const translationIdx = t.indexOf('Translation', Math.max(readingIdx,0)+50);
-
-  // ── Writing (Part I: before Listening) ──
-  const writingIdx = t.search(/Writing|Part\s*I\s/);
-  if (writingIdx >= 0 && listeningIdx > writingIdx) {
-    const wt = t.substring(writingIdx, listeningIdx > 0 ? listeningIdx : (readingIdx > 0 ? readingIdx : t.length));
-    if (wt.length > 100) S.push({ type: 'writing' as any, title: 'Part I — 写作', text: wt.substring(0, 2000) });
-  }
-
-  // ── Listening (3 sections) ──
-  if (listeningIdx > 0) {
-    const end = readingIdx > listeningIdx ? readingIdx : t.length;
-    const lt = t.substring(listeningIdx, end);
-    // Use simple regex loop (more reliable than matchAll spread)
-    const lSecs: { name: string; idx: number }[] = [];
-    let lm: RegExpExecArray | null;
-    const lre = /Section\s+[A-C]/gi;
-    while ((lm = lre.exec(lt)) !== null) {
-      lSecs.push({ name: lm[0], idx: lm.index });
-    }
-    for (let i = 0; i < lSecs.length; i++) {
-      const s = lSecs[i].idx;
-      const e = i + 1 < lSecs.length ? lSecs[i + 1].idx : lt.length;
-      const txt = lt.substring(s, e);
-      if (txt.length > 100) {
-        const nm = lSecs[i].name.toUpperCase();
-        const title = nm.includes('A') ? 'Section A — 长对话' :
-                      nm.includes('B') ? 'Section B — 听力篇章' :
-                      'Section C — 听力篇章';
-        S.push({ type: 'listening' as any, title, text: txt });
-      }
-    }
-    if (lSecs.length === 0 && lt.length > 200) S.push({ type: 'listening' as any, title: '听力理解', text: lt });
-  }
-
-  // ── Reading + Translation ──
-  if (readingIdx >= 0) {
-    const end = translationIdx>readingIdx?translationIdx:t.length;
-    const rt = t.substring(readingIdx,end);
-    const rs = [...rt.matchAll(/Section\s+[A-C]/gi)].sort((a,b)=>a.index!-b.index!);
-
-    for(let i=0;i<rs.length;i++){
-      const s=rs[i].index!,e=i+1<rs.length?rs[i+1].index!:rt.length;
-      const txt=rt.substring(s,e); if(txt.length<80) continue;
-      const up=rs[i][0].toUpperCase();
-
-      if(up.includes('SECTION A')){
-        const wb:string[]=[];
-        const bs=txt.substring(Math.floor(txt.length*0.6));
-        (bs.match(/[A-O]\)\s*(\w[\w-]*\w)/g)||[]).forEach(m=>{const w=m.replace(/^[A-O]\)\s*/,'').trim();if(w.length>=2&&!wb.includes(w))wb.push(w)});
-        S.push({type:'banked-cloze',title:'Section A — 选词填空',text:txt,wordBank:wb.slice(0,20)});
-      }else if(up.includes('SECTION B')){
-        S.push({type:'long-reading-match',title:'Section B — 长篇阅读匹配',text:txt});
-      }else if(up.includes('SECTION C')){
-        const p1=rt.indexOf('Passage One',s),p2=rt.indexOf('Passage Two',s);
-        if(p2>0&&p2>p1){S.push({type:'careful-reading',title:'Passage One — 仔细阅读',text:rt.substring(p1,p2)});S.push({type:'careful-reading',title:'Passage Two — 仔细阅读',text:rt.substring(p2)});}
-        else if(p1>0){S.push({type:'careful-reading',title:'Passage One — 仔细阅读',text:rt.substring(p1)});}
-        else{S.push({type:'careful-reading',title:'仔细阅读',text:txt});}
-      }
-    }
-
-    // Translation
-    if(translationIdx>0){const tt=t.substring(translationIdx);const ch=tt.match(/[一-鿿][一-鿿\s，。！？、；：""''（）《》\n]{30,}/);S.push({type:'translation',title:'Part IV — 翻译',text:tt.substring(0,1000),sourceText:ch?ch[0].trim():tt.substring(0,300)});}
-  }
-
-  if(readingIdx<0){if(t.length>500)S.push({type:'careful-reading',title:'Reading',text:t});}
-  return S.filter(s=>s.text.length>80);
-}
-
-// ═══ AI Prompts ═══
-function buildPrompt(s: SectionExtract): string {
-  switch(s.type){
-    case 'banked-cloze': return `Extract this CET-6 banked-cloze section. CRITICAL: split each paragraph into individual sentences (one per array entry). Keep blank numbers in text (e.g. " 26 "). Extract ALL 15 word bank words. Each question (26-35) gets ALL 15 options. Output ONLY JSON: {"title":"选词填空","section":"banked-cloze","wordBank":["w1",...15],"paragraphs":[{"id":"p1","sentences":["sentence one.","sentence two."]}],"questions":[{"id":"q26","number":26,"questionType":"banked-cloze","content":"为第26空选择最合适的单词","options":[{key:A,text:w1},...all 15],"correctAnswer":"H","answerExplanation":"✅正确答案H因为...[语境/语法] ❌错误选项A/B/C因为...[分别说明为何错]"}]} Must output exactly 10 questions.`;
-    case 'long-reading-match': return `Extract this CET-6 long-reading matching section. CRITICAL RULES:
-1. Put paragraph label ONLY on the FIRST sentence of each paragraph: "[A] first sentence." then "second sentence." (no [A] prefix).
-2. Split into INDIVIDUAL sentences — each sentence = one array entry.
-3. Extract ALL 10 matching statements (36-45). Each with matchParagraph and correctAnswer.
-Output ONLY JSON: {"title":"长篇阅读","section":"long-reading-match","paragraphs":[{"id":"p1","sentences":["[A] The first sentence of paragraph A.","The second sentence."]}],"questions":[{"id":"q36","number":36,"questionType":"long-reading-match","content":"statement","matchParagraph":"D","correctAnswer":"D","options":[],"answerExplanation":"✅正确:... ❌A/B/C错误:分别因为..."}]}`;
-    case 'careful-reading': return `Extract this CET-6 reading passage. CRITICAL: split each paragraph into INDIVIDUAL sentences — NOT whole paragraph as one. Extract all 5 questions with complete text and 4 options. Output ONLY JSON: {"title":"仔细阅读","section":"careful-reading","paragraphs":[{"id":"p1","sentences":["sentence one.","sentence two."]}],"questions":[{"id":"q46","number":46,"questionType":"careful-reading","content":"question text","options":[{"key":"A","text":"choice"}],"correctAnswer":"A","answerExplanation":"✅正确:... ❌A/B/C错误:分别因为..."}]}`;
-    case 'listening': return `Extract ALL multiple-choice questions from this listening section. Output ONLY valid JSON array of questions. Each question has: id, number (must match original numbering), questionType:"listening", content (the full question stem), options (array of {key,text} for A/B/C/D), correctAnswer (the correct letter), answerExplanation (Chinese). Format: {"title":"听力","section":"listening","paragraphs":[],"questions":[{"id":"q1","number":1,"questionType":"listening","content":"...","options":[{"key":"A","text":"..."},{"key":"B","text":"..."},{"key":"C","text":"..."},{"key":"D","text":"..."}],"correctAnswer":"A","answerExplanation":"✅正确:... ❌A/B/C/D错误:分别因为..."}]} IMPORTANT: count the questions carefully. Extract EVERY numbered question from the text.`;
-    case 'writing': return `Extract this CET-6 writing prompt. Output ONLY JSON. Format: {"title":"写作","section":"writing","paragraphs":[{"id":"p1","sentences":["essay prompt"]}],"questions":[{"id":"q1","number":1,"questionType":"writing","content":"Write an essay based on the prompt","options":[],"correctAnswer":"","answerExplanation":"写作思路+关键论点+核心词汇(中英文)"}]}`;
-    case 'translation': return `Extract Chinese-English translation. Output ONLY JSON. Format: {"title":"翻译","section":"translation","sourceText":"Chinese text","wordBank":["keyword"],"paragraphs":[],"questions":[{"id":"q1","number":1,"questionType":"translation","content":"Translate to English","options":[],"correctAnswer":"","answerExplanation":"关键句型+核心词汇+翻译要点(中英文)"}]}`;
-    default: return '';
-  }
+function detectExamType(text: string): string {
+  if (/IELTS|雅思/i.test(text)) return 'ielts';
+  if (/TOEFL|托福/i.test(text)) return 'toefl';
+  if (/考研|Kaoyan/i.test(text)) return 'kaoyan';
+  if (/CET-?4|四级|Band\s*4/i.test(text)) return 'cet4';
+  if (/CET-?6|六级|Band\s*6/i.test(text)) return 'cet6';
+  return 'cet6'; // default
 }
 
 function extractJson(raw: string): any {
@@ -195,18 +87,20 @@ async function startServer() {
       }else{return res.status(400).json({error:"Unsupported format. Use PDF, DOCX, or TXT."});}
 
       if(!t?.trim()) return res.status(400).json({error:"No text extracted"});
-      let c=cleanPdfText(t);
-      c=segmentSentences(c);
+      const c=cleanText(t);
 
       // Year detection
       let yr='';const ym=c.match(/(\d{4})\s*年\s*(\d{1,2})\s*月/);
       if(ym) yr=`${ym[1]}年${ym[2]}月`;
       else{const fm=c.match(/(\d{4})[-.](\d{1,2})/);if(fm)yr=`${fm[1]}年${fm[2]}月`;}
       if(!yr){const nf=originalname.match(/(\d{4})[年-](\d{1,2})/);if(nf)yr=`${nf[1]}年${nf[2]}月`;}
-      const is4=/CET-?4|四级/i.test(c),is6=/CET-?6|六级/i.test(c);
 
-      console.log(`[Extract] ${originalname}: ${t.length}→${c.length} chars, year:${yr}`);
-      res.json({text:c,detectedYear:yr,examType:is4?'四级':is6?'六级':''});
+      // Detect exam type
+      const detectedExamType = detectExamType(c);
+      const examTypeLabel = detectedExamType === 'cet4' ? '四级' : detectedExamType === 'cet6' ? '六级' : detectedExamType;
+
+      console.log(`[Extract] ${originalname}: ${t.length}→${c.length} chars, year:${yr}, exam:${detectedExamType}`);
+      res.json({text:c,detectedYear:yr,examType:examTypeLabel,detectedExamType});
     }catch(e:any){res.status(500).json({error:"Extraction failed",details:e?.message});}
   });
 
@@ -231,12 +125,15 @@ async function startServer() {
   app.post("/api/parse-exam",async(req,res)=>{
     const log:string[]=[];
     try{
-      const {text,apiKey,model}=req.body;
+      const {text,apiKey,model,examType}=req.body;
       if(!apiKey||!text) return res.status(400).json({error:"API Key required"});
-      log.push(`text:${text.length} chars`);
+      log.push(`text:${text.length} chars, examType:${examType||'cet6'}`);
       const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
       const m=model||'deepseek-v4-pro';
-      const sections=extractSections(text);
+
+      // Strategy: select parser by examType
+      const parser=getParser(examType||'cet6');
+      const sections=parser.extractSections(text);
       log.push(`sections:${sections.length}(${sections.map(s=>s.type+'@'+s.text.length).join(',')})`);
       if(!sections.length) return res.status(400).json({error:"No exam sections found",_log:log});
 
@@ -246,16 +143,16 @@ async function startServer() {
         let parsed:any=null;
         for(let attempt=0;attempt<2;attempt++){
           try{
-            const prompt=buildPrompt(sec);
+            const prompt=parser.buildPrompt(sec);
             const c=await (o.chat.completions.create as any)({model:m,messages:[{role:"system",content:prompt},{role:"user",content:sec.text.substring(0,attempt===0?12000:8000)}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
             const raw=c.choices[0].message.content||'{}';
             parsed=extractJson(raw);
             log.push(`  attempt${attempt+1}: keys=${Object.keys(parsed).join(',')} Qs=${(parsed.questions||[]).length}`);
-            if(parsed && Object.keys(parsed).length>1) break; // Accept if AI returned anything beyond empty {}
+            if(parsed && Object.keys(parsed).length>1) break;
           }catch(e:any){log.push(`  attempt${attempt+1} FAILED:${e.message}`);await new Promise(r=>setTimeout(r,1000));}
         }
         if(parsed){
-          parsed.section=parsed.section||sec.type;parsed.title=sec.title; // Always use extractor's title for uniqueness
+          parsed.section=parsed.section||sec.type;parsed.title=sec.title;
           if(sec.wordBank&&!parsed.wordBank) parsed.wordBank=sec.wordBank;
           if(sec.sourceText&&!parsed.sourceText) parsed.sourceText=sec.sourceText;
           parsed.paragraphs=parsed.paragraphs||[];parsed.questions=parsed.questions||[];
@@ -462,6 +359,18 @@ Rules:
       const result=allPhrases.map((p:any,i:number)=>({...p,color:colors[i%colors.length]}));
       res.json({phrases:result});
     }catch(e:any){res.status(500).json({error:"Phrase scan failed",details:e?.message});}
+  });
+
+  // Parse reading (pure reading mode — no AI, just segmentation)
+  app.post("/api/parse-reading", async(req,res)=>{
+    try{
+      const {text}=req.body;
+      if(!text) return res.status(400).json({error:"Text required"});
+      const cleaned=cleanText(text);
+      const paragraphs=segmentParagraphs(cleaned);
+      const passage={id:`reading-${Date.now()}`,title:'精读文章',section:'reading',paragraphs,questions:[]};
+      res.json({passages:[passage]});
+    }catch(e:any){res.status(500).json({error:"Reading parse failed",details:e?.message});}
   });
 
   // Vite

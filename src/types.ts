@@ -20,33 +20,94 @@ export interface ChatSession {
   updatedAt: number;
 }
 
-// ─── CET-6 Question Types ───
+// ─── Exam Types ───
+export type ExamType = 'cet4' | 'cet6' | 'ielts' | 'toefl' | 'kaoyan' | 'reading';
+
+export const ExamTypeLabels: Record<ExamType, string> = {
+  cet4: '英语四级',
+  cet6: '英语六级',
+  ielts: '雅思',
+  toefl: '托福',
+  kaoyan: '考研英语',
+  reading: '精读模式',
+};
+
+export const ExamTypeIcons: Record<ExamType, string> = {
+  cet4: '📘', cet6: '📕', ielts: '🇬🇧', toefl: '🇺🇸', kaoyan: '🎓', reading: '📖',
+};
+
+// ─── Question Types ───
 export type QuestionType =
-  | 'banked-cloze'       // 选词填空 — Section A
-  | 'long-reading-match' // 长篇阅读匹配 — Section B
-  | 'careful-reading'    // 仔细阅读 — Section C
-  | 'listening'          // 听力理解 — Part II
-  | 'translation'        // 翻译 — Part IV
-  | 'writing';           // 写作 — Part I
+  | 'banked-cloze'       // 选词填空 — CET Section A
+  | 'long-reading-match' // 长篇阅读匹配 — CET Section B
+  | 'careful-reading'    // 仔细阅读 — CET Section C
+  | 'listening'          // 听力理解
+  | 'translation'        // 翻译
+  | 'writing'            // 写作
+  | 'ielts-reading'      // 雅思阅读（T/F/NG、填空、匹配、选择）
+  | 'ielts-listening'    // 雅思听力
+  | 'ielts-writing'      // 雅思写作
+  | 'toefl-reading'      // 托福阅读
+  | 'toefl-listening'    // 托福听力
+  | 'toefl-writing'      // 托福写作
+  | 'toefl-speaking'     // 托福口语
+  | 'kaoyan-reading'     // 考研阅读
+  | 'kaoyan-translation' // 考研翻译
+  | 'kaoyan-writing'     // 考研写作
+  | 'fill-blank'         // 通用填空
+  | 'mcq'                // 通用多选
+  | 'short-answer'       // 通用简答
+  | 'true-false'         // 判断题
+  | 'reading';           // 纯精读（无题目）
 
 export type SectionType = QuestionType;
 
-export const SectionLabels: Record<SectionType, string> = {
+export const SectionLabels: Record<string, string> = {
   'banked-cloze': '选词填空',
   'long-reading-match': '长篇阅读匹配',
   'careful-reading': '仔细阅读',
   'listening': '听力理解',
   'translation': '翻译',
   'writing': '写作',
+  'ielts-reading': '雅思阅读',
+  'ielts-listening': '雅思听力',
+  'ielts-writing': '雅思写作',
+  'toefl-reading': '托福阅读',
+  'toefl-listening': '托福听力',
+  'toefl-writing': '托福写作',
+  'toefl-speaking': '托福口语',
+  'kaoyan-reading': '考研阅读',
+  'kaoyan-translation': '考研翻译',
+  'kaoyan-writing': '考研写作',
+  'fill-blank': '填空题',
+  'mcq': '选择题',
+  'short-answer': '简答题',
+  'true-false': '判断题',
+  'reading': '精读',
 };
 
-export const SectionIcons: Record<SectionType, string> = {
+export const SectionIcons: Record<string, string> = {
   'banked-cloze': '📝',
   'long-reading-match': '📑',
   'careful-reading': '📖',
   'listening': '🎧',
   'translation': '🌐',
   'writing': '✍️',
+  'ielts-reading': '🇬🇧',
+  'ielts-listening': '👂',
+  'ielts-writing': '✏️',
+  'toefl-reading': '🇺🇸',
+  'toefl-listening': '🎼',
+  'toefl-writing': '🖋️',
+  'toefl-speaking': '🗣️',
+  'kaoyan-reading': '🎓',
+  'kaoyan-translation': '🔤',
+  'kaoyan-writing': '📝',
+  'fill-blank': '⬜',
+  'mcq': '🔘',
+  'short-answer': '✍️',
+  'true-false': '✓',
+  'reading': '📖',
 };
 
 // ─── Questions & Passages ───
@@ -62,6 +123,10 @@ export interface Question {
   matchParagraph?: string;
   /** For translation: the Chinese source text snippet */
   sourceText?: string;
+  /** For fill-blank: list of acceptable answers */
+  acceptableAnswers?: string[];
+  /** Question sub-type for ielts (e.g. 'true-false-ng', 'matching', 'fill-blank', 'mcq') */
+  subType?: string;
 }
 
 export interface Passage {
@@ -82,6 +147,7 @@ export interface Passage {
 
 export interface ExamPaper {
   id: string;
+  examType?: ExamType;
   year: string;
   title: string;
   passages: Passage[];
@@ -205,7 +271,7 @@ export interface PainRecord {
   /** Question IDs the user got wrong or asked for help with */
   askedQuestions: string[];
   /** Count per question type */
-  questionsByType: Record<QuestionType, number>;
+  questionsByType: Record<string, number>;
   /** Timestamps of study sessions */
   sessionDates: number[];
 }

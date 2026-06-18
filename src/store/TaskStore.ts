@@ -84,7 +84,8 @@ class TaskManager {
     apiKey: string,
     model: string,
     isThinking: boolean,
-    onComplete: (result: any) => void
+    onComplete: (result: any) => void,
+    examType?: string
   ) {
     const id = Date.now().toString() + Math.random().toString(36).substring(7);
     const m = model || 'deepseek-v4-pro';
@@ -107,7 +108,7 @@ class TaskManager {
           const res = await fetch('/api/parse-exam', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: rawText, apiKey, model: m }),
+            body: JSON.stringify({ text: rawText, apiKey, model: m, examType }),
           });
           if (!res.ok) {
             const err = await res.json().catch(() => null);

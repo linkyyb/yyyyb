@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExamPaper, Bookmark, VocabList, SectionLabels, SectionIcons } from '../types';
+import { ExamPaper, Bookmark, VocabList, SectionLabels, SectionIcons, ExamTypeLabels, ExamTypeIcons } from '../types';
 import { Library, Bookmark as BookmarkIcon, Plus, X, Search, FileText, CheckCircle, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import UploadExamModal from './UploadExamModal';
 import UploadVocabModal from './UploadVocabModal';
@@ -101,7 +101,22 @@ export default function AppSidebar({
               </div>
             )}
 
-            {[...exams].sort((a, b) => b.year.localeCompare(a.year)).map((exam) => {
+            {/* Group exams by examType */}
+            {(() => {
+              const sortedExams = [...exams].sort((a, b) => b.year.localeCompare(a.year));
+              const byType: Record<string, ExamPaper[]> = {};
+              sortedExams.forEach(e => {
+                const t = e.examType || 'cet6';
+                if (!byType[t]) byType[t] = [];
+                byType[t].push(e);
+              });
+              return Object.entries(byType).map(([type, typeExams]) => (
+                <div key={type} className="space-y-2">
+                  <div className="text-[10px] font-bold text-[var(--th-text-soft)] px-2 flex items-center gap-1">
+                    <span>{ExamTypeIcons[type as keyof typeof ExamTypeIcons] || '📄'}</span>
+                    {ExamTypeLabels[type as keyof typeof ExamTypeLabels] || type}
+                  </div>
+                  {typeExams.map((exam) => {
               const isCollapsed = collapsedExams.has(exam.id);
               const isSelectedExam = selectedExamId === exam.id;
               const grouped = groupPassagesBySection(exam.passages);
@@ -171,7 +186,10 @@ export default function AppSidebar({
                   )}
                 </div>
               );
-            })}
+                  })}
+                </div>
+              ));
+            })()}
           </div>
         )}
 

@@ -9,6 +9,7 @@ import VocabViewer from './components/VocabViewer';
 import GlobalProgressIndicator from './components/GlobalProgressIndicator';
 import WordPopup from './components/WordPopup';
 import ExamTimer from './components/ExamTimer';
+import ReadingViewer from './components/ReadingViewer';
 
 export default function App() {
   const [exams, setExams] = useState<ExamPaper[]>(builtInExams);
@@ -385,6 +386,15 @@ export default function App() {
             <div className="relative"><ExamTimer /></div>
           </div>
           {activeTab === 'exams' && selectedPassage ? (
+            selectedPassage.section === 'reading' ? (
+              <ReadingViewer
+                passage={selectedPassage}
+                onSentenceClick={explainSentence}
+                onWordClick={handleWordClick}
+                onBookmark={handleAddBookmark}
+                fontSize={fontSize}
+              />
+            ) : (
             <MainViewer
               passage={selectedPassage}
               onSentenceClick={explainSentence}
@@ -401,6 +411,7 @@ export default function App() {
               }}
               onBookmark={handleAddBookmark}
             />
+            )
           ) : activeTab === 'vocab' && selectedVocab ? (
             <VocabViewer
               vocabList={selectedVocab}
