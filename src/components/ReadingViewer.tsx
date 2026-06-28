@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+import { Sparkles, BookmarkPlus } from 'lucide-react';
 import { Passage } from '../types';
 
 interface ReadingViewerProps {
@@ -49,8 +51,7 @@ export default function ReadingViewer({ passage, onSentenceClick, onWordClick, o
 }
 
 // ── Inline sentence renderer (simplified from MainViewer RenderSentence) ──
-import { useRef } from 'react';
-import { Sparkles, BookmarkPlus } from 'lucide-react';
+
 
 function ReadingSentence({ text, onWordClick, onSentenceClick, onBookmark, passageTitle }: {
   text: string;

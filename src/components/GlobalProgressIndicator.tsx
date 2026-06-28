@@ -17,7 +17,7 @@ export default function GlobalProgressIndicator() {
       // Auto-dismiss completed/error tasks after 8 seconds
       const now = Date.now();
       allTasks.forEach(t => {
-        if ((t.status === 'completed' || t.status === 'error') && now - t.startTime > 8000) {
+        if ((t.status === 'completed' || t.status === 'error') && t.completedAt && now - t.completedAt > 8000) {
           taskManager.removeTask(t.id);
         }
       });
@@ -28,7 +28,7 @@ export default function GlobalProgressIndicator() {
       const now = Date.now();
       let changed = false;
       allTasks.forEach(t => {
-        if ((t.status === 'completed' || t.status === 'error') && now - t.startTime > 8000) {
+        if ((t.status === 'completed' || t.status === 'error') && t.completedAt && now - t.completedAt > 8000) {
           taskManager.removeTask(t.id);
           changed = true;
         }

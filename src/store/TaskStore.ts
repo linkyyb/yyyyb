@@ -12,6 +12,7 @@ export interface ParseTask {
   status: TaskStatus;
   progress: number;
   startTime: number;
+  completedAt?: number;
   error?: string;
   _debugLog?: string[];
   chunks: string[];
@@ -25,7 +26,7 @@ export interface ParseTask {
 class TaskManager {
   private tasks: Map<string, ParseTask> = new Map();
   private listeners: Set<() => void> = new Set();
-  private concurrencyLimit = 100;
+  private concurrencyLimit = 10;
   private activeWorkers = 0;
   private queue: Array<() => Promise<void>> = [];
   private persistKey = 'cet6_task_queue';
@@ -209,11 +210,13 @@ class TaskManager {
       if (task.status === 'running' && task.completedChunks === task.totalChunks) {
         if (task.failedChunks === task.totalChunks) {
           task.status = 'error';
+          task.completedAt = Date.now();
           task.error = `All tasks failed. Check API key and network.`;
           this.emit();
           continue;
         }
         task.status = 'completed';
+        task.completedAt = Date.now();
         this.emit();
         this.finalizeTask(task);
       }

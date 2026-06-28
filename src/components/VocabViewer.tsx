@@ -186,7 +186,7 @@ export default function VocabViewer({ vocabList, onExplainWord, onWordClick, onB
         <div className="space-y-3">
           {filteredWords.map((item, idx) => (
             <WordCard
-              key={idx}
+              key={item.id}
               item={item}
               onExplainWord={onExplainWord}
               onWordClick={onWordClick}

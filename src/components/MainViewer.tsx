@@ -93,7 +93,7 @@ function RenderSentence({ text, onWordClick, onSentenceClick, onBookmark, phrase
         onTouchStart={handleTouchStart}
         onTouchEnd={(e) => handleTouchEnd(e, part, text)}
         className="cursor-pointer hover:bg-blue-500 hover:text-white active:bg-blue-600 rounded-sm px-[1px] transition-colors touch-manipulation"
-        title="鐐瑰嚮鏌ヨ瘝"
+        title="点击查词"
       >
         {part}
       </span>
