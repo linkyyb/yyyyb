@@ -7,9 +7,10 @@ export const TOEFLParser: ExamParser = {
   extractSections(t: string): SectionExtract[] {
     const S: SectionExtract[] = [];
     const readingIdx = t.search(/Reading\s*(Section|Passage|Direction)/i);
-    const listeningIdx = t.search(/Listening/i);
-    const speakingIdx = t.search(/Speaking/i);
-    const writingIdx = t.search(/Writing/i);
+    // Use word-boundary + section-title patterns to avoid matching body text
+    const listeningIdx = t.search(/\bListening\s*(Section|Comprehension|Part|Direction|Test|Module)\b/i);
+    const speakingIdx = t.search(/\bSpeaking\s*(Section|Task|Part|Direction|Test|Module)\b/i);
+    const writingIdx = t.search(/\bWriting\s*(Section|Task|Part|Direction|Test|Module)\b/i);
 
     // Reading: multiple passages
     if (readingIdx >= 0) {

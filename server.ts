@@ -137,29 +137,52 @@ async function startServer() {
       log.push(`sections:${sections.length}(${sections.map(s=>s.type+'@'+s.text.length).join(',')})`);
       if(!sections.length) return res.status(400).json({error:"No exam sections found",_log:log});
 
-      const results:any[]=[];
-      for(const sec of sections){
+      // Truncate text at a sentence boundary to avoid cutting mid-question
+      function smartTruncate(text:string, limit:number): string {
+        if(text.length<=limit) return text;
+        // Try to cut at last sentence-ending punctuation before limit
+        const slice=text.substring(0,limit);
+        const lastPunct=Math.max(slice.lastIndexOf('.\n'),slice.lastIndexOf('?\n'),slice.lastIndexOf('!\n'),slice.lastIndexOf('. '),slice.lastIndexOf('? '),slice.lastIndexOf('! '));
+        return lastPunct>limit*0.7 ? text.substring(0,lastPunct+1) : slice;
+      }
+
+      // Parse all sections in parallel for speed
+      const settled = await Promise.allSettled(sections.map(async (sec) => {
         log.push(`parse ${sec.type}...`);
-        let parsed:any=null;
+        const prompt=parser.buildPrompt(sec);
         for(let attempt=0;attempt<2;attempt++){
           try{
-            const prompt=parser.buildPrompt(sec);
-            const c=await (o.chat.completions.create as any)({model:m,messages:[{role:"system",content:prompt},{role:"user",content:sec.text.substring(0,attempt===0?12000:8000)}],response_format:{type:"json_object"},thinking:{type:'disabled'}});
+            const charLimit=attempt===0?12000:8000;
+            const c=await (o.chat.completions.create as any)({
+              model:m,
+              messages:[{role:"system",content:prompt},{role:"user",content:smartTruncate(sec.text,charLimit)}],
+              response_format:{type:"json_object"},
+              thinking:{type:'disabled'}
+            });
             const raw=c.choices[0].message.content||'{}';
-            parsed=extractJson(raw);
-            log.push(`  attempt${attempt+1}: keys=${Object.keys(parsed).join(',')} Qs=${(parsed.questions||[]).length}`);
-            if(parsed && Object.keys(parsed).length>1) break;
-          }catch(e:any){log.push(`  attempt${attempt+1} FAILED:${e.message}`);await new Promise(r=>setTimeout(r,1000));}
+            const parsed=extractJson(raw);
+            log.push(`  ${sec.type} attempt${attempt+1}: keys=${Object.keys(parsed).join(',')} Qs=${(parsed.questions||[]).length}`);
+            if(parsed && Object.keys(parsed).length>1){
+              parsed.section=parsed.section||sec.type;
+              parsed.title=sec.title;
+              if(sec.wordBank&&!parsed.wordBank) parsed.wordBank=sec.wordBank;
+              if(sec.sourceText&&!parsed.sourceText) parsed.sourceText=sec.sourceText;
+              parsed.paragraphs=parsed.paragraphs||[];
+              parsed.questions=parsed.questions||[];
+              parsed.id=parsed.id||`sec-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+              return parsed;
+            }
+          }catch(e:any){log.push(`  ${sec.type} attempt${attempt+1} FAILED:${(e as Error).message}`);await new Promise(r=>setTimeout(r,1000));}
         }
-        if(parsed){
-          parsed.section=parsed.section||sec.type;parsed.title=sec.title;
-          if(sec.wordBank&&!parsed.wordBank) parsed.wordBank=sec.wordBank;
-          if(sec.sourceText&&!parsed.sourceText) parsed.sourceText=sec.sourceText;
-          parsed.paragraphs=parsed.paragraphs||[];parsed.questions=parsed.questions||[];
-          parsed.id=parsed.id||`sec-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-          results.push(parsed);log.push(`  ADDED`);
-        }else{log.push(`  SKIPPED`);}
-      }
+        return null;
+      }));
+
+      // Collect results in original section order
+      const results:any[]=[];
+      settled.forEach((r,i)=>{
+        if(r.status==='fulfilled'&&r.value){results.push(r.value);log.push(`  ${sections[i].type} ADDED`);}
+        else{log.push(`  ${sections[i].type} SKIPPED`);}
+      });
       log.push(`done:${results.length} passages`);
       console.log('[Parse]',log.join(' | '));
       res.json({passages:results,_log:log});

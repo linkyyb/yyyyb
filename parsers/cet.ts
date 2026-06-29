@@ -8,7 +8,10 @@ export const CETParser: ExamParser = {
     const S: SectionExtract[] = [];
     const readingIdx = t.search(/Reading\s*Comprehension/i);
     const listeningIdx = t.search(/Listening\s*Comprehension/i);
-    const translationIdx = t.indexOf('Translation', Math.max(readingIdx, 0) + 50);
+    // Case-insensitive translation search, starting after Reading section
+    const translationSearch = t.slice(Math.max(readingIdx, 0) + 50);
+    const translationRel = translationSearch.search(/\bTranslation\b/i);
+    const translationIdx = translationRel >= 0 ? Math.max(readingIdx, 0) + 50 + translationRel : -1;
 
     // Writing
     const writingIdx = t.search(/Writing|Part\s*I\s/);
@@ -52,25 +55,38 @@ export const CETParser: ExamParser = {
         const up = rs[i][0].toUpperCase();
 
         if (up.includes('SECTION A')) {
+          // Extract word bank from the entire section text (not just last 40%)
+          // Supports formats: A) word  A. word  (A) word
           const wb: string[] = [];
-          const bs = txt.substring(Math.floor(txt.length * 0.6));
-          (bs.match(/[A-O]\)\s*(\w[\w-]*\w)/g) || []).forEach(m => {
-            const w = m.replace(/^[A-O]\)\s*/, '').trim();
-            if (w.length >= 2 && !wb.includes(w)) wb.push(w);
-          });
+          const wbRe = /(?:^|\s)[A-O][.)\s]\s*([A-Za-z][\w-]*(?:\s+[A-Za-z][\w-]*)?)/gm;
+          let wm: RegExpExecArray | null;
+          while ((wm = wbRe.exec(txt)) !== null) {
+            const w = wm[1].trim();
+            if (w.length >= 2 && w.length <= 25 && !wb.includes(w)) wb.push(w);
+          }
+          // Fallback: search last 40% if whole-text found nothing
+          if (wb.length < 5) {
+            const bs = txt.substring(Math.floor(txt.length * 0.5));
+            (bs.match(/[A-O][.)\s]\s*(\w[\w-]*)/g) || []).forEach(m => {
+              const w = m.replace(/^[A-O][.)\s]\s*/, '').trim();
+              if (w.length >= 2 && !wb.includes(w)) wb.push(w);
+            });
+          }
           S.push({ type: 'banked-cloze', title: 'Section A — 选词填空', text: txt, wordBank: wb.slice(0, 20) });
         } else if (up.includes('SECTION B')) {
           S.push({ type: 'long-reading-match', title: 'Section B — 长篇阅读匹配', text: txt });
         } else if (up.includes('SECTION C')) {
-          // Use flexible passage boundary detection
-          const bounds = findPassageBoundaries(rt.substring(s));
+          // Use flexible passage boundary detection within Section C slice
+          const secCSlice = rt.substring(s, e);
+          const bounds = findPassageBoundaries(secCSlice);
           if (bounds.length >= 2) {
-            const p1Start = s + bounds[0].start;
-            const p2Start = s + bounds[1].start;
-            S.push({ type: 'careful-reading', title: 'Passage One — 仔细阅读', text: rt.substring(p1Start, p2Start) });
-            S.push({ type: 'careful-reading', title: 'Passage Two — 仔细阅读', text: rt.substring(p2Start) });
+            const p1Start = bounds[0].start;
+            const p2Start = bounds[1].start;
+            // Passage Two ends at the Section C slice boundary (e), not at rt.length
+            S.push({ type: 'careful-reading', title: 'Passage One — 仔细阅读', text: secCSlice.substring(p1Start, p2Start) });
+            S.push({ type: 'careful-reading', title: 'Passage Two — 仔细阅读', text: secCSlice.substring(p2Start) });
           } else if (bounds.length === 1) {
-            S.push({ type: 'careful-reading', title: 'Passage One — 仔细阅读', text: rt.substring(s + bounds[0].start) });
+            S.push({ type: 'careful-reading', title: 'Passage One — 仔细阅读', text: secCSlice.substring(bounds[0].start) });
           } else {
             S.push({ type: 'careful-reading', title: '仔细阅读', text: txt });
           }

@@ -6,12 +6,15 @@ export function cleanText(raw: string): string {
   t = t.replace(/\t/g, ' ');
   t = t.replace(/[ ]{2,}/g, ' ');
   t = t.replace(/Ⅰ/g, 'I').replace(/Ⅱ/g, 'II').replace(/Ⅲ/g, 'III').replace(/Ⅳ/g, 'IV');
-  // Remove spaces between CJK characters
-  t = t.replace(/([一-鿿㐀-䶿])\s+([一-鿿㐀-䶿])/g, '$1$2');
-  t = t.replace(/([一-鿿])\s+([，。！？；：、（）《》【】])/g, '$1$2');
-  // Merge spaces between digits (loop until stable)
-  let prev = '';
-  while (prev !== t) { prev = t; t = t.replace(/(\d)\s+(\d)/g, '$1$2'); }
+  // Remove spaces between CJK characters (BMP + Ext-B/C/D ranges)
+  t = t.replace(/([一-鿿㐀-䶿\u{20000}-\u{2A6DF}])\s+([一-鿿㐀-䶿\u{20000}-\u{2A6DF}])/gu, '$1$2');
+  t = t.replace(/([一-鿿㐀-䶿\u{20000}-\u{2A6DF}])\s+([，。！？；：、（）《》【】])/gu, '$1$2');
+  // Only merge spaces between SINGLE-digit characters — fixes PDF char-level spacing (e.g. "2 0 2 5" → "2025")
+  // Does NOT merge multi-digit groups to avoid destroying "2025 年 12 月" etc.
+  t = t.replace(/(?<=\b\d)\s+(?=\d\b)/g, '');
+  // Stable-loop merge for remaining isolated single digits (e.g. "2 0 2 5" after first pass)
+  let prev = '', passes = 0;
+  while (prev !== t && passes++ < 5) { prev = t; t = t.replace(/(^|\s)(\d)\s+(\d)(\s|$)/gm, '$1$2$3$4'); }
   t = t.replace(/([a-zA-Z])\s+([,.!?;:])/g, '$1$2');
   t = t.replace(/Directions:([A-Z])/g, 'Directions: $1');
   t = t.replace(/([a-z]):([A-Z])/g, '$1: $2');
@@ -47,10 +50,16 @@ export function segmentParagraphs(text: string): { id: string; sentences: string
       const prev = merged[merged.length - 1];
       const prevEnd = prev.slice(-1);
       const currStart = ln.charAt(0);
-      // Merge only if previous line doesn't end with sentence punctuation
-      // AND current line starts with lowercase (continuation) — but NOT a question/passage
+      // Handle hyphenated line-breaks: "comprehen-" + "sion" → "comprehension"
+      if (prevEnd === '-' && /^[a-zA-Z]/.test(currStart)) {
+        merged[merged.length - 1] = prev.slice(0, -1) + ln;
+        continue;
+      }
+      // Merge if previous line doesn't end with sentence punctuation
+      // AND current line is a continuation (lowercase, comma, OR common continuation words)
       const prevIsSentenceEnd = '.!?。！？"]\')'.includes(prevEnd);
-      const currIsContinuation = /[a-z,]/.test(currStart);
+      const continuationWord = /^(the|a|an|in|on|at|to|of|for|and|but|or|nor|so|yet|as|if|when|while|that|which|who|whose|with|by|from|into|about|over|under|through|between|among|after|before|since|until|during|because|although|though|however|therefore|thus|moreover|furthermore|nevertheless|nonetheless|meanwhile|consequently|accordingly|hence|thereby|whereas|whereby|whether|unless|until|provided|given|despite|regarding|concerning|including|excluding|following|considering|upon|per|via|versus|within|without|throughout|alongside|beyond|above|below|behind|around|across|against|along|amid|towards|toward|onto|off|out|up|down|away|apart|aside|together|instead|rather|else|even|just|only|also|both|either|neither|such|more|less|most|least|few|many|much|some|any|no|all|each|every|other|another|same|different|various|several|certain|particular|specific|general|certain|various)[^a-zA-Z]/i.test(ln);
+      const currIsContinuation = /^[a-z,]/.test(currStart) || continuationWord;
       if (!prevIsSentenceEnd && currIsContinuation) {
         merged[merged.length - 1] = prev + ' ' + ln;
         continue;

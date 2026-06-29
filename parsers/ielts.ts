@@ -12,8 +12,8 @@ export const IELTSParser: ExamParser = {
       ? t.search(/Reading/i)
       : t.search(/Passage\s*1/i);
 
-    // Listening
-    const listeningIdx = t.search(/Listening/i);
+    // Listening: match only section-title patterns
+    const listeningIdx = t.search(/\bListening\s*(Section|Test|Passage|Part|Module|Comprehension)\b/i);
     // Writing
     const writingIdx = t.search(/Writing\s*(Task|Test)/i);
 
