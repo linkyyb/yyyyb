@@ -159,8 +159,8 @@ function DrawPad({ saved, onSave }: { saved: string; onSave: (dataUrl: string) =
 }
 
 
-// Clickable word wrapper for chat — double-click only (stricter)
-// Custom text renderer for Markdown: makes words double-clickable while keeping formatting
+// Clickable word wrapper for chat — double-click only
+// Replaces individual words in a string with clickable span elements
 function ClickableMarkdownText({ children, onWordClick }: { children?: React.ReactNode; onWordClick?: (word: string, x: number, y: number) => void }) {
   if (!onWordClick || typeof children !== 'string') return <>{children}</>;
   const parts = children.split(/\b/);
@@ -174,6 +174,24 @@ function ClickableMarkdownText({ children, onWordClick }: { children?: React.Rea
     return <span key={i}>{p}</span>;
   })}</>;
 }
+
+// Helper to wrap direct string children of Markdown elements with ClickableMarkdownText
+function processMarkdownChildren(children: React.ReactNode, onWordClick?: (word: string, x: number, y: number) => void): React.ReactNode {
+  if (!onWordClick) return children;
+  return React.Children.map(children, child => {
+    if (typeof child === 'string') {
+      return <ClickableMarkdownText onWordClick={onWordClick}>{child}</ClickableMarkdownText>;
+    }
+    return child;
+  });
+}
+
+// Factory to create custom Markdown components that make their text children clickable
+const createClickableComponent = (Tag: keyof React.JSX.IntrinsicElements, onWordClick?: (word: string, x: number, y: number) => void) => {
+  return ({ node, children, ...props }: any) => {
+    return <Tag {...props}>{processMarkdownChildren(children, onWordClick)}</Tag>;
+  };
+};
 
 function ClickableText({ text, onWordClick }: { text: string; onWordClick: (word: string, x: number, y: number) => void }) {
   const parts = text.split(/\b/);
@@ -396,7 +414,21 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
                     )}
                     <div className="markdown-body space-y-2 text-[15px] leading-relaxed break-words">
                       <Markdown components={chatWordClickEnabled && onWordClick ? {
-                        text: ({ children }) => <ClickableMarkdownText onWordClick={onWordClick}>{children}</ClickableMarkdownText>
+                        p: createClickableComponent('p', onWordClick),
+                        li: createClickableComponent('li', onWordClick),
+                        strong: createClickableComponent('strong', onWordClick),
+                        em: createClickableComponent('em', onWordClick),
+                        h1: createClickableComponent('h1', onWordClick),
+                        h2: createClickableComponent('h2', onWordClick),
+                        h3: createClickableComponent('h3', onWordClick),
+                        h4: createClickableComponent('h4', onWordClick),
+                        h5: createClickableComponent('h5', onWordClick),
+                        h6: createClickableComponent('h6', onWordClick),
+                        span: createClickableComponent('span', onWordClick),
+                        a: createClickableComponent('a', onWordClick),
+                        td: createClickableComponent('td', onWordClick),
+                        th: createClickableComponent('th', onWordClick),
+                        // 'code' intentionally omitted to prevent code-blocks from becoming clickable
                       } : {}}>{msg.content}</Markdown>
                     </div>
                  </div>
