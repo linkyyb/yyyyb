@@ -311,7 +311,8 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
     try {
       const formattedMessages = [
         { role: 'system', content: systemContext },
-        ...messages.map((m) => ({ role: m.role, content: m.content })),
+        // 只保留最近 20 条消息作为上下文，防止 Token 爆炸
+        ...messages.slice(-20).map((m) => ({ role: m.role, content: m.content })),
         { role: 'user', content: text }
       ];
 
@@ -321,15 +322,61 @@ export default function ChatPanel({ systemContext, autoSendPrompt, clearAutoSend
         body: JSON.stringify({ messages: formattedMessages, apiKey, model, isThinking: isThinkingMode }),
       });
 
-      const data = await res.json();
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         throw new Error(data.error || data.details || 'Failed to fetch AI response');
       }
 
-      setMessages((prev) => [...prev, { id: uuidv4(), role: 'assistant', content: data.content, reasoning_content: data.reasoning_content, timestamp: Date.now() }]);
+      // Stream response handling
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('No readable stream available');
+      
+      const decoder = new TextDecoder();
+      let assistantMsg: ChatMessage = { id: uuidv4(), role: 'assistant', content: '', reasoning_content: '', timestamp: Date.now() };
+      
+      // 添加空消息到列表，并关闭 loading 动画
+      setMessages((prev) => [...prev, assistantMsg]);
+      setIsLoading(false);
+
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // 最后一行可能不完整，保留到下一次
+
+        let updated = false;
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6);
+            if (dataStr === '[DONE]') continue;
+            try {
+              const delta = JSON.parse(dataStr);
+              if (delta.content) {
+                assistantMsg.content += delta.content;
+                updated = true;
+              }
+              if (delta.reasoning_content) {
+                assistantMsg.reasoning_content = (assistantMsg.reasoning_content || '') + delta.reasoning_content;
+                updated = true;
+              }
+            } catch (e) {
+              // 忽略不完整的 JSON 块
+            }
+          } else if (line.startsWith('event: error')) {
+            throw new Error('Streaming error occurred');
+          }
+        }
+        
+        // 如果内容有更新，重新渲染
+        if (updated) {
+          setMessages((prev) => prev.map(m => m.id === assistantMsg.id ? { ...assistantMsg } : m));
+        }
+      }
     } catch (err: any) {
       setMessages((prev) => [...prev, { id: uuidv4(), role: 'assistant', content: `**Error:** ${err.message}`, timestamp: Date.now() }]);
-    } finally {
       setIsLoading(false);
     }
   };

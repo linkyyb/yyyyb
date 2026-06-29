@@ -61,9 +61,30 @@ async function startServer() {
       const {messages,apiKey,model,isThinking}=req.body;
       if(!apiKey||!messages) return res.status(400).json({error:"API Key required"});
       const o=new OpenAI({baseURL:'https://api.deepseek.com',apiKey});
-      const c=await o.chat.completions.create(llmParams(messages,model,isThinking,false));
-      res.json(c.choices[0].message);
-    }catch(e:any){res.status(500).json({error:"Chat failed",details:e?.message});}
+      const params = llmParams(messages,model,isThinking,false);
+      (params as any).stream = true;
+
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      const stream = await o.chat.completions.create(params as any);
+      for await (const chunk of stream) {
+        const delta = chunk.choices[0]?.delta;
+        if (delta) {
+          res.write(`data: ${JSON.stringify(delta)}\n\n`);
+        }
+      }
+      res.write('data: [DONE]\n\n');
+      res.end();
+    }catch(e:any){
+      if (!res.headersSent) {
+        res.status(500).json({error:"Chat failed",details:e?.message});
+      } else {
+        res.write(`event: error\ndata: ${JSON.stringify({error: "Chat failed", details: e?.message})}\n\n`);
+        res.end();
+      }
+    }
   });
 
   // Extract text
